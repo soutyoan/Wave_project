@@ -83,7 +83,7 @@ class SteerablePyramid():
 					image chosen name
 		out_path 	string
 					name of output path for images saving (asbolute path is handled in init)
-		verbose 	{0, 1} (disabled option for this project)
+		verbose 	{0, 1} (disabled option for filters functions)
 					0 : no displays, 1 : displays
 		'''
 		self.XRES = xres # horizontal resolution
