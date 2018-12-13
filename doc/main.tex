@@ -1,0 +1,272 @@
+% A LaTeX (non-official) template for ISAE projects reports
+% Copyright (C) 2014 Damien Roque
+% Version: 0.2
+% Author: Damien Roque <damien.roque_AT_isae.fr>
+
+% Updated version for Ensimag homework reports by Yoan Souty
+
+\documentclass[a4paper,12pt, openany, twoside]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[frenchb]{babel} % If you write in French
+%\usepackage[english]{babel} % If you write in English
+\usepackage{a4wide}
+\usepackage{lipsum}
+\usepackage{tikz} % to draw diagrams
+\usetikzlibrary{shapes} % more available figures with TikZ
+\usepackage{graphicx}
+\graphicspath{{images/}} % emplacement des images
+\usepackage{subfig}
+ \usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+\pgfplotsset{plot coordinates/math parser=false}
+\newlength\figureheight
+\newlength\figurewidth
+\pgfkeys{/pgf/number format/.cd,
+set decimal separator={,\!},
+1000 sep={\,},
+}
+\usepackage{ifthen}
+\usepackage{ifpdf}
+\ifpdf
+\usepackage[pdftex]{hyperref}
+\else
+\usepackage{hyperref}
+\fi
+\usepackage{color}
+\hypersetup{%
+colorlinks=true,
+linkcolor=black,
+citecolor=black,
+urlcolor=black}
+
+\usepackage{titlesec}
+\titleformat{\section}[hang]{\bf\huge}{\thesection}{2pc}{}
+
+\renewcommand{\thesection}{\Roman{section}}
+
+
+\renewcommand{\baselinestretch}{1.05}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\renewcommand{\sectionmark}[1]{\markboth{\thesection .\ #1}{}}
+\renewcommand{\subsectionmark}[1]{\markright{\thesubsection .\ #1}}
+\fancyhead{}
+\fancyhead[RE]{\nouppercase{\leftmark}}
+\fancyhead[LO]{\nouppercase{\rightmark}}
+\renewcommand{\headrulewidth}{0pt}
+
+\let\headruleORIG\headrule
+\renewcommand{\headrule}{\color{black} \headruleORIG}
+\renewcommand{\headrulewidth}{1.0pt}
+\usepackage{colortbl}
+\arrayrulecolor{black}
+
+\fancypagestyle{plain}{
+  \fancyhead{}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0pt}
+}
+
+\makeatletter
+\def\@textbottom{\vskip \z@ \@plus 1pt}
+\let\@texttop\relax
+\makeatother
+
+\makeatletter
+\def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else%
+  \hbox{}%
+  \thispagestyle{empty}%
+  \newpage%
+  \if@twocolumn\hbox{}\newpage\fi\fi\fi}
+\makeatother
+
+\usepackage{amsthm}
+\usepackage{amssymb,amsmath,bbm}
+\usepackage{array}
+\usepackage{bm}
+\usepackage{multirow}
+\usepackage[footnote]{acronym}
+
+\newcommand*{\SET}[1]  {\ensuremath{\mathbf{#1}}}
+\newcommand*{\VEC}[1]  {\ensuremath{\boldsymbol{#1}}}
+\newcommand*{\FAM}[1]  {\ensuremath{\boldsymbol{#1}}}
+\newcommand*{\MAT}[1]  {\ensuremath{\boldsymbol{#1}}}
+\newcommand*{\OP}[1]  {\ensuremath{\mathrm{#1}}}
+\newcommand*{\NORM}[1]  {\ensuremath{\left\|#1\right\|}}
+\newcommand*{\DPR}[2]  {\ensuremath{\left \langle #1,#2 \right \rangle}}
+\newcommand*{\calbf}[1]  {\ensuremath{\boldsymbol{\mathcal{#1}}}}
+\newcommand*{\shift}[1]  {\ensuremath{\boldsymbol{#1}}}
+
+\newcommand{\eqdef}{\stackrel{\mathrm{def}}{=}}
+\newcommand{\argmax}{\operatornamewithlimits{argmax}}
+\newcommand{\argmin}{\operatornamewithlimits{argmin}}
+\newcommand{\ud}{\, \mathrm{d}}
+\newcommand{\vect}{\text{Vect}}
+\newcommand{\sinc}{\ensuremath{\mathrm{sinc}}}
+\newcommand{\esp}{\ensuremath{\mathbb{E}}}
+\newcommand{\hilbert}{\ensuremath{\mathcal{H}}}
+\newcommand{\fourier}{\ensuremath{\mathcal{F}}}
+\newcommand{\sgn}{\text{sgn}}
+\newcommand{\intTT}{\int_{-T}^{T}}
+\newcommand{\intT}{\int_{-\frac{T}{2}}^{\frac{T}{2}}}
+\newcommand{\intinf}{\int_{-\infty}^{+\infty}}
+\newcommand{\Sh}{\ensuremath{\boldsymbol{S}}}
+\newcommand{\C}{\SET{C}}
+\newcommand{\R}{\SET{R}}
+\newcommand{\Z}{\SET{Z}}
+\newcommand{\N}{\SET{N}}
+\newcommand{\K}{\SET{K}}
+\newcommand{\reel}{\mathcal{R}}
+\newcommand{\imag}{\mathcal{I}}
+\newcommand{\cmnr}{c_{m,n}^\reel}
+\newcommand{\cmni}{c_{m,n}^\imag}
+\newcommand{\cnr}{c_{n}^\reel}
+\newcommand{\cni}{c_{n}^\imag}
+\newcommand{\tproto}{g}
+\newcommand{\rproto}{\check{g}}
+\newcommand{\LR}{\mathcal{L}_2(\SET{R})}
+\newcommand{\LZ}{\ell_2(\SET{Z})}
+\newcommand{\LZI}[1]{\ell_2(\SET{#1})}
+\newcommand{\LZZ}{\ell_2(\SET{Z}^2)}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\noise}{z}
+\newcommand{\Noise}{Z}
+\newcommand{\filtnoise}{\zeta}
+\newcommand{\tp}{g}
+\newcommand{\rp}{\check{g}}
+\newcommand{\TP}{G}
+\newcommand{\RP}{\check{G}}
+\newcommand{\dmin}{d_{\mathrm{min}}}
+\newcommand{\Dmin}{D_{\mathrm{min}}}
+\newcommand{\Image}{\ensuremath{\text{Im}}}
+\newcommand{\Span}{\ensuremath{\text{Span}}}
+
+\newtheoremstyle{break}
+  {11pt}{11pt}%
+  {\itshape}{}%
+  {\bfseries}{}%
+  {\newline}{}%
+\theoremstyle{break}
+
+%\theoremstyle{definition}
+\newtheorem{definition}{Définition}[section]
+
+%\theoremstyle{definition}
+\newtheorem{theoreme}{Théorème}[section]
+
+%\theoremstyle{remark}
+\newtheorem{remarque}{Remarque}[]
+
+%\theoremstyle{plain}
+\newtheorem{propriete}{Propriété}[section]
+\newtheorem{exemple}{Exemple}[section]
+
+\newtheorem{question}{Question}[section]
+
+\parskip=5pt
+%\sloppy
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%
+%%% First page %%%
+%%%%%%%%%%%%%%%%%%
+
+% \begin{titlepage}
+% \begin{center}
+%
+% \includegraphics[width=0.6\textwidth]{ensimag_logo.png}\\[1cm]
+%
+% {\large Ensimag MMIS 3A}\\[0.5cm]
+%
+% {\large Ondelettes et applications au traitemen d'image}\\[0.5cm]
+%
+% % Title
+% \rule{\linewidth}{0.5mm} \\[0.4cm]
+% { \huge \bfseries Résumé et plan  du projet\\[0.4cm] }
+% \rule{\linewidth}{0.5mm} \\[1.5cm]
+%
+% % Author and supervisor
+% \noindent
+% \begin{minipage}{0.4\textwidth}
+%   \begin{flushleft} \large
+%     \emph{Auteurs :}\\
+%     % M\up{me} Prénom \textsc{Nom}\\
+%     M. Antonin \textsc{Klopp-Tosser}\\
+%     M. Yoan \textsc{Souty} \\
+%   \end{flushleft}
+% \end{minipage}%
+% \begin{minipage}{0.4\textwidth}
+%   \begin{flushright} \large
+%     \emph{Encadrante :} \\
+%     M\up{me} Valérie \textsc{Perrier} \\
+%
+%     % Dr.~Prénom \textsc{Nom}
+%   \end{flushright}
+% \end{minipage}
+%
+% \vfill
+%
+% % Bottom of the page
+% {\large \today}
+%
+% \end{center}
+% \end{titlepage}
+%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%% Non-significant pages %%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% %%% Content of the report and references %%%
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% \pagestyle{fancy}
+
+
+% \tableofcontents
+%
+% \clearpage
+%
+% \listoffigures
+
+\clearpage
+\paragraph{Article choisi}
+
+R. Hassen, Z. Wang and M. M. A. Salama, \textit{Image Sharpness Assessment Based on Local Phase Coherence}, in IEEE Transactions on Image Processing, vol. 22, no. 7, pp. 2798-2810, July 2013.
+\paragraph{Résumé}
+
+L'article propose le calcul d'un indice de netteté (\textit{sharpness index}) d'une image à partir d'une décomposition en ondelettes complexes. La principale application est d'avoir un indice de qualité d'image sans référence.
+
+L'idée générale est que les variations brusques d'un signal peuvent être perçues en remarquant que les phases des coefficients d'ondelettes au voisinage de cette variation sont très proches. Le début de l'article montre donc l'intérêt de décomposer un signal en ondelettes complexes pour exploiter cette propriété.
+
+Pour calculer l'indice de netteté $S_{LPC}$ d'une image $I$, on décompose cette dernière en ondelettes sur $N$ échelles et $M$ orientations. On peut alors calculer une image donnant pour chaque coefficient sa valeur de cohérence de phase. Cette image auxiliaire est ensuite utilisée pour en déduire la valeur globale $S_{LPC} \in [0, 1]$. Une image sera donc de \textit{bonne qualité} si $S_{LPC}$ est proche de 1, proche de 0 sinon. Le calcul de $S_{LPC}$ dépend de plusieurs paramètres, qui sont fixés empiriquement dans le papier.
+
+La fin de l'article est une comparaison entre plusieurs indices de qualité à l'aide de base d'images prénotées.
+
+% \begin{center}
+%   \begin{tikzpicture}
+%     \tikzstyle{noeud}=[minimum width=3cm,minimum height=3cm,rectangle,draw]
+%     \node[noeud] (I) at (0,0) {Image};
+%     \node[noeud] (S) at (5,0) {LPC map};
+%     \draw[->,>=latex] (I) -- (S);
+%   \end{tikzpicture}
+%
+% \end{center}
+
+
+\paragraph{Plan du projet}
+Nous avons choisi Python pour implémenter le calcul de $S_{LPC}$. Selon la richesse des bibliothèques Python, on peut être amené à implémenter la décomposition en ondelettes complexes pyramidales.
+\begin{enumerate}
+  \item Analyse de l'influence des paramètres
+  \item Application 1 : détection d'apparition de flou sur une image
+  \item Application 2 : détection de contours (comparaison avec d'autres algos : Canny, gradient)
+\end{enumerate}
+
+
+\end{document}
