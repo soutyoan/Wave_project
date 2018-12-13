@@ -63,7 +63,7 @@ LOGGER = logging.getLogger(os.path.basename(__file__))
 '''
 
 class SteerablePyramid():
-	def __init__(self, image, xres, yres, n, k, image_name, out_path, verbose):
+	def __init__(self, image, xres, yres, n, k, image_name, out_path, verbose=0):
 		'''
 		Class initialisation.
 
@@ -83,7 +83,7 @@ class SteerablePyramid():
 					image chosen name
 		out_path 	string
 					name of output path for images saving (asbolute path is handled in init)
-		verbose 	{0, 1}
+		verbose 	{0, 1} (disabled option for this project)
 					0 : no displays, 1 : displays
 		'''
 		self.XRES = xres # horizontal resolution
@@ -195,16 +195,17 @@ class SteerablePyramid():
 		_ind = np.where((self.RS[0] > np.pi/2.) & (self.RS[0] < np.pi))
 		fil[_ind] = np.cos(np.pi/2. * np.log2( self.RS[0][_ind]/np.pi) )
 
-		if self.verbose == 1:
-			# save image
-			# plt.clf()
-			# plt.contourf(self.WX[0], self.WY[0], fil)
-			# plt.axes().set_aspect('equal', 'datalim')
-			# plt.colorbar()
-			# plt.xlabel('x')
-			# plt.ylabel('y')
-			# plt.title('H0 Filter : Fourier Domain')
-			# plt.savefig(self.OUT_PATH.format('fil_highpass0.png'))
+		# if (self.verbose == 1):
+		#
+		# 	save image
+		# 	plt.clf()
+		# 	plt.contourf(self.WX[0], self.WY[0], fil)
+		# 	plt.axes().set_aspect('equal', 'datalim')
+		# 	plt.colorbar()
+		# 	plt.xlabel('x')
+		# 	plt.ylabel('y')
+		# 	plt.title('H0 Filter : Fourier Domain')
+		# 	plt.savefig(self.OUT_PATH.format('fil_highpass0.png'))
 
 		return fil
 
@@ -216,17 +217,17 @@ class SteerablePyramid():
 		_ind = np.where((self.RS[0] > np.pi/2.) & (self.RS[0] < np.pi))
 		fil[_ind] = np.cos(np.pi/2. * np.log2(2. * self.RS[0][_ind]/np.pi))
 
-		if self.verbose == 1:
-			# save image
-			# plt.clf()
-			# plt.contourf(self.WX[0], self.WY[0], fil)
-			# plt.axes().set_aspect('equal', 'datalim')
-			# plt.colorbar()
-			# plt.xlabel('x')
-			# plt.ylabel('y')
-			# plt.title('L0 Filter : Fourier Domain')
-			# plt.savefig(self.OUT_PATH.format('fil_lowpass0.png'))
-
+		# if (self.verbose == 1):
+		#
+		# 	# save image
+		# 	plt.clf()
+		# 	plt.contourf(self.WX[0], self.WY[0], fil)
+		# 	plt.axes().set_aspect('equal', 'datalim')
+		# 	plt.colorbar()
+		# 	plt.xlabel('x')
+		# 	plt.ylabel('y')
+		# 	plt.title('L0 Filter : Fourier Domain')
+		# 	plt.savefig(self.OUT_PATH.format('fil_lowpass0.png'))
 		return fil
 
 	# caliculate L filter values on the grid.
@@ -241,15 +242,16 @@ class SteerablePyramid():
 
 			_f.append(fil)
 
-			if i == 0 and self.verbose == 1:
-				# plt.clf()
-				# plt.contourf(self.WX[i], self.WY[i], fil)
-				# plt.axes().set_aspect('equal', 'datalim')
-				# plt.colorbar()
-				# plt.xlabel('x')
-				# plt.ylabel('y')
-				# plt.title('Lowpass filter of Layer{} : Fourier Domain'.format(str(i)))
-				# plt.savefig(self.OUT_PATH.format('fil_lowpass-layer{}.png'.format(str(i))))
+			# if i == 0 and self.verbose == 1:
+			#
+			# 	plt.clf()
+			# 	plt.contourf(self.WX[i], self.WY[i], fil)
+			# 	plt.axes().set_aspect('equal', 'datalim')
+			# 	plt.colorbar()
+			# 	plt.xlabel('x')
+			# 	plt.ylabel('y')
+			# 	plt.title('Lowpass filter of Layer{} : Fourier Domain'.format(str(i)))
+			# 	plt.savefig(self.OUT_PATH.format('fil_lowpass-layer{}.png'.format(str(i))))
 
 		return _f
 
@@ -265,15 +267,16 @@ class SteerablePyramid():
 
 			_f.append(fil)
 
-			if i == 0 and self.verbose == 1:
-				# plt.clf()
-				# plt.contourf(self.WX[i], self.WY[i], fil)
-				# plt.axes().set_aspect('equal', 'datalim')
-				# plt.colorbar()
-				# plt.xlabel('x')
-				# plt.ylabel('y')
-				# plt.title('Highpass filter of Layer{} : Fourier Domain'.format(str(i)))
-				# plt.savefig(self.OUT_PATH.format('fil_highpass-layer{}.png'.format(str(i))))
+			# if i == 0 and self.verbose == 1:
+			#
+			# 	plt.clf()
+			# 	plt.contourf(self.WX[i], self.WY[i], fil)
+			# 	plt.axes().set_aspect('equal', 'datalim')
+			# 	plt.colorbar()
+			# 	plt.xlabel('x')
+			# 	plt.ylabel('y')
+			# 	plt.title('Highpass filter of Layer{} : Fourier Domain'.format(str(i)))
+			# 	plt.savefig(self.OUT_PATH.format('fil_highpass-layer{}.png'.format(str(i))))
 
 		return _f
 
@@ -302,24 +305,25 @@ class SteerablePyramid():
 				fil_= self.H_FILT[i] * fil_
 				fils_.append(fil_.copy())
 
-				if i == 0 and self.verbose == 1:
-					# plt.clf()
-					# plt.contourf(self.WX[i], self.WY[i], np.abs(fil_))
-					# plt.axes().set_aspect('equal', 'datalim')
-					# plt.colorbar()
-					# plt.xlabel('x')
-					# plt.ylabel('y')
-					# plt.title('Bandpass filter of layer{} : Fourier Domain'.format(str(i)))
-					# plt.savefig(self.OUT_PATH.format('fil_bandpass{}-layer{}.png'.format(str(k), str(i))))
-
-					# plt.clf()
-					# plt.contourf(self.WX[i], self.WY[i], np.abs(fil_ * self.L0_FILT))
-					# plt.axes().set_aspect('equal', 'datalim')
-					# plt.colorbar()
-					# plt.xlabel('x')
-					# plt.ylabel('y')
-					# plt.title('Bandpass * Lowpass filter of layer{}'.format(str(i)))
-					# plt.savefig(self.OUT_PATH.format('fil_lo-bandpass{}-layer{}.png'.format(str(k), str(i))))
+				# if i == 0 and self.verbose == 1:
+				#
+				# 	plt.clf()
+				# 	plt.contourf(self.WX[i], self.WY[i], np.abs(fil_))
+				# 	plt.axes().set_aspect('equal', 'datalim')
+				# 	plt.colorbar()
+				# 	plt.xlabel('x')
+				# 	plt.ylabel('y')
+				# 	plt.title('Bandpass filter of layer{} : Fourier Domain'.format(str(i)))
+				# 	plt.savefig(self.OUT_PATH.format('fil_bandpass{}-layer{}.png'.format(str(k), str(i))))
+				#
+				# 	plt.clf()
+				# 	plt.contourf(self.WX[i], self.WY[i], np.abs(fil_ * self.L0_FILT))
+				# 	plt.axes().set_aspect('equal', 'datalim')
+				# 	plt.colorbar()
+				# 	plt.xlabel('x')
+				# 	plt.ylabel('y')
+				# 	plt.title('Bandpass * Lowpass filter of layer{}'.format(str(i)))
+				# 	plt.savefig(self.OUT_PATH.format('fil_lo-bandpass{}-layer{}.png'.format(str(k), str(i))))
 
 			f_.append(fils_)
 
