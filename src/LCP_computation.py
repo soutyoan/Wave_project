@@ -41,7 +41,7 @@ def compute_LPC_strength(steer, j, k):
 
 def compute_spatial_LPC(steer, k, C):
     """
-    Computation of Local Phsae Coherence coefficient.
+    Computation of Local Phase Coherence coefficient.
 
     Parameters
     ----------
@@ -110,8 +110,6 @@ if (__name__ == "__main__"):
     parser.add_argument('--verbose', '-v', default=1, type=int, help='verbose')
     args = parser.parse_args()
 
-    print(args)
-
     # Grayscale mode image reading
     image = cv2.imread(ROOT_PATH+"/images/"+args.input_file, 0)
     assert image is not None
@@ -122,7 +120,7 @@ if (__name__ == "__main__"):
     steer = SteerablePyramid(image, xres, yres, args.depth, args.orientation, image_name, ROOT_PATH+"/output", args.verbose)
 
     # Computation of LPC map
-    LPC_map = compute_LPC_map(steer, C)
+    LPC_map = compute_LPC_map(steer, args.constant)
 
     if steer.verbose:
         cv2.imwrite(ROOT_PATH+"output/{}_LPC_map.png".format(image_name), np.absolute(LPC_map))
