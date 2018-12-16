@@ -18,91 +18,145 @@ for s in os.path.abspath(__file__).split('/'):
         break
 
 
+def get_w(N, d, s1=1, mode='lin'):
+    """
+        Computation of w vector used for the LPC strength computation.
+        w is the solution of the linear system :
+
+                        Aw = b
+        where A (N+1)x(N+1) and b (N+1) both depend on real coefficients determined by d.
+        Those real coefficients, stored in a vector, can be either computed with a linear
+        mode such as s = [s1, s1 + d, s1 + 2d, ..., s1 + (N-1)d] or a log mode s.t
+                     s = [d^0, d, d^2, ..., d^(N-1)]
+
+        Parameters
+        ----------
+        N           Integer
+                    number of scales of the steerable pyramid
+        d           float
+                    step value for s vector computation
+        s1          float
+                    choice of strength of the finest scale, default = 1
+        mode        string, {'lin', 'log'}
+                    mode choice for scales strength, default = 'lin'
+
+        Returns
+        -------
+        numpy.ndarray
+                    w vector of length N
+    """
+    # vector containing s2, ..., sN values for system resolution
+    _s = np.zeros(N-1)
+    if (mode=='lin'):
+        _s = np.array([1+i*d for i in range(1,N)])
+    elif (mode=='log'):
+        _s = np.array([d**i for i in range(1, N)])
+    if (DEBUG_PRINT):
+        print("s vector :\n", _s)
+    # A matrix construction
+    A = np.zeros((N+1, N+1))
+    A[:-2,:-2] = np.identity(N-1)
+    A[-2,:-2] = 1
+    A[-1,:-2] = 1/_s
+    A[:-2,-2] = 0.5
+    A[:-2,-1] = 0.5*1/_s.T
+    if (DEBUG_PRINT):
+        print("A matrix \n", A)
+    # b vector construction
+    b = -1 * np.ones(N+1)
+    b[:-2] = 0
+    if (DEBUG_PRINT):
+        print("b vector \n", b)
+    res = np.ones(N)
+    res[1:] = np.linalg.solve(A, b)[:-2]
+    return res
+
 
 def compute_LPC_strength(steer, j, k):
     """
-    Computation of Local Phase Coherence strength
+        Computation of Local Phase Coherence strength
 
-    Parameters
-    ----------
-    steer       SteerablePyramid
-                input steerable Pyramid
-    j           integer
-                chosen orientation
-    k           integer
-                spatial location
+        Parameters
+        ----------
+        steer       SteerablePyramid
+                    input steerable Pyramid
+        j           integer
+                    chosen orientation
+        k           integer
+                    spatial location
 
-    Returns
-    -------
-    float
-                S_{LPC}^{j,k}
+        Returns
+        -------
+        float
+                    S_{LPC}^{j,k}
     """
     # TODO
 
+
 def compute_spatial_LPC(steer, k, C):
     """
-    Computation of Local Phsae Coherence coefficient.
+        Computation of Local Phsae Coherence coefficient.
 
-    Parameters
-    ----------
-    steer       SteerablePyramid
-                input steerable pyramid
-    k           integer
-                spatial location
-    C           float
-                constant for stabilisation purposes
+        Parameters
+        ----------
+        steer       SteerablePyramid
+                    input steerable pyramid
+        k           integer
+                    spatial location
+        C           float
+                    constant for stabilisation purposes
 
-    Returns
-    -------
-    float
-                S_{LPC}^{k}
+        Returns
+        -------
+        float
+                    S_{LPC}^{k}
     """
     # TODO
     return 0.0
 
 def compute_LPC_map(steer, C):
     """
-    Computation of LPC map.
+        Computation of LPC map.
 
-    Parameters
-    ----------
-    steer       SteerablePyramid
-                input steerable pyramid
-    C           float > 0
-                constant for stabilisation purposes
+        Parameters
+        ----------
+        steer       SteerablePyramid
+                    input steerable pyramid
+        C           float > 0
+                    constant for stabilisation purposes
 
-    Returns
-    -------
-    numpy.ndarray
-                map of LPC coefficient
+        Returns
+        -------
+        numpy.ndarray
+                    map of LPC coefficient
     """
     # TODO
-    
+
 
 def compute_LPC_index(steer, C, beta):
     """
-    Computation of LPC index.
+        Computation of LPC index.
 
-    Parameters
-    ----------
-    steer           SteerablePyramid
-                    input steerable pyramid
-    C               float > 0
-                    constant for stabilisation purposes
-    beta            float > 0
-                    constant of weighting LPC coefficients
+        Parameters
+        ----------
+        steer           SteerablePyramid
+                        input steerable pyramid
+        C               float > 0
+                        constant for stabilisation purposes
+        beta            float > 0
+                        constant of weighting LPC coefficients
 
-    Returns
-    -------
-    float in [0, 1]
-                    LPC-based sharpness index of steer.IMAGE_ARRAY
+        Returns
+        -------
+        float in [0, 1]
+                        LPC-based sharpness index of steer.IMAGE_ARRAY
     """
     # TODO
 
 if (__name__ == "__main__"):
     parser = argparse.ArgumentParser(description="Wavelets project 2018-2019 : Sharpness index based on Local Phase Coherence")
     parser.add_argument("--input_file", '-i', help='Input File Name (file must be in images/ folder)')
-    parser.add_argument('--depth', '-N', default=3, type=int, help='Depth of Pyramid. Integer in {3, 4, 5}')
+    parser.add_argument('--depth', '-N', default=3, type=int, help='Depth of Pyramid. Integer')
     parser.add_argument('--orientation', '-M', default=8, type=int, help='Number of orientations of pyramid. Integer')
     parser.add_argument('--constant', '-C', default=2, type=float, help='Constant for LPC coefficients computation. Float')
     parser.add_argument('--beta', '-B', default=0.0001, type=float, help='Constant for LPC coefficients weighting. Float')
@@ -127,4 +181,4 @@ if (__name__ == "__main__"):
     if steer.verbose:
         cv2.imwrite(ROOT_PATH+"output/{}_LPC_map.png".format(image_name), np.absolute(LPC_map))
 
-    # Computation of
+    # Computation of LPC score
