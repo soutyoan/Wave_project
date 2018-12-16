@@ -95,9 +95,10 @@ def compute_LPC_strength(steer, j, k, d=1, s1=1, mode='lin'):
     _phi = []
     ind = k
     for i in range(steer.N):
+        #print(ind, steer.BND[i][j]['s'].size)
         _cijk = steer.BND[i][j]['s'].flatten()[ind]
         _phi.append(np.angle(_cijk))
-        ind >>= 1
+        ind >>= 2
     _phi = np.array(_phi)
     return np.cos(np.dot(_w, _phi))
 
@@ -196,7 +197,8 @@ if (__name__ == "__main__"):
     # Computation of LPC map
     LPC_map = compute_LPC_map(steer, args.constant)
 
-    if steer.verbose:
-        cv2.imwrite(ROOT_PATH+"output/{}_LPC_map.png".format(image_name), np.absolute(LPC_map))
+    print(LPC_map)
+
+    cv2.imwrite(ROOT_PATH+"output/{}_LPC_map.png".format(image_name), np.absolute(250*LPC_map))
 
     # Computation of LPC score
