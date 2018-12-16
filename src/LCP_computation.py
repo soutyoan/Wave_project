@@ -183,8 +183,6 @@ if (__name__ == "__main__"):
     parser.add_argument('--verbose', '-v', default=1, type=int, help='verbose')
     args = parser.parse_args()
 
-    print(args)
-
     # Grayscale mode image reading
     image = cv2.imread(ROOT_PATH+"/images/"+args.input_file, 0)
     assert image is not None

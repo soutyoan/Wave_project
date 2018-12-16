@@ -20,7 +20,7 @@
 	http://www.cns.nyu.edu/pub/lcv/portilla99.pdf
 
 	According to MatLab source code distributed by E.Simoncelli, filters are applied in
-	spatioal domain.
+	spatial domain.
 	https://github.com/gregfreeman/matlabPyrTools
 
 	See also,
