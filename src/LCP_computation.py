@@ -7,8 +7,9 @@ import os, sys, cv2
 import numpy as np
 from SteerablePyramid import SteerablePyramid
 import argparse
+import progressbar
 
-DEBUG_PRINT = 1  # for debug purposes
+DEBUG_PRINT = 0  # for debug purposes
 
 # Building root path
 ROOT_PATH=""
@@ -18,7 +19,7 @@ for s in os.path.abspath(__file__).split('/'):
         break
 
 
-def get_w(N, d, s1=1, mode='lin'):
+def get_w(N, d=1.0, s1=1.0, mode='lin'):
     """
         Computation of w vector used for the LPC strength computation.
         w is the solution of the linear system :
@@ -33,9 +34,9 @@ def get_w(N, d, s1=1, mode='lin'):
         ----------
         N           Integer
                     number of scales of the steerable pyramid
-        d           float
+        d           float, optional
                     step value for s vector computation
-        s1          float
+        s1          float, optional
                     choice of strength of the finest scale, default = 1
         mode        string, {'lin', 'log'}
                     mode choice for scales strength, default = 'lin'
@@ -72,7 +73,7 @@ def get_w(N, d, s1=1, mode='lin'):
     return res
 
 
-def compute_LPC_strength(steer, j, k):
+def compute_LPC_strength(steer, j, k, d=1, s1=1, mode='lin'):
     """
         Computation of Local Phase Coherence strength
 
@@ -90,7 +91,16 @@ def compute_LPC_strength(steer, j, k):
         float
                     S_{LPC}^{j,k}
     """
-    # TODO
+    _w = get_w(steer.N, d=d, s1=s1, mode=mode)
+    _phi = []
+    ind = k
+    for i in range(steer.N):
+        _cijk = steer.BND[i][j]['s'].flatten()[ind]
+        _phi.append(np.angle(_cijk))
+        ind >>= 1
+    _phi = np.array(_phi)
+    return np.cos(np.dot(_w, _phi))
+
 
 
 def compute_spatial_LPC(steer, k, C):
@@ -111,8 +121,11 @@ def compute_spatial_LPC(steer, k, C):
         float
                     S_{LPC}^{k}
     """
-    # TODO
-    return 0.0
+    c1jk = np.absolute(np.array([steer.BND[0][j]['s'].flatten()[k] for j in range(steer.K)]))
+    phi = np.array([compute_LPC_strength(steer,j,k) for j in range(steer.K)])
+    return np.sum(c1jk * phi) / (np.sum(c1jk) + C)
+
+
 
 def compute_LPC_map(steer, C):
     """
@@ -130,7 +143,13 @@ def compute_LPC_map(steer, C):
         numpy.ndarray
                     map of LPC coefficient
     """
-    # TODO
+    res = np.zeros(steer.IMAGE_ARRAY.size)
+    res = res.flatten()
+    bar = progressbar.ProgressBar(max_value=res.shape[0])
+    for k in range(res.shape[0]):
+        res[k] = compute_spatial_LPC(steer, k, C)
+        bar.update(k)
+    return res.reshape(steer.IMAGE_ARRAY.shape[:2])
 
 
 def compute_LPC_index(steer, C, beta):
@@ -173,10 +192,11 @@ if (__name__ == "__main__"):
 
     # Steerable pyramid building
     image_name = args.input_file.split('.')[0]
-    steer = SteerablePyramid(image, xres, yres, args.depth, args.orientation, image_name, ROOT_PATH+"/output", args.verbose)
+    steer = SteerablePyramid(image, xres, yres, args.depth, args.orientation, image_name, ROOT_PATH+"output", args.verbose)
+    steer.create_pyramids()
 
     # Computation of LPC map
-    LPC_map = compute_LPC_map(steer, C)
+    LPC_map = compute_LPC_map(steer, args.constant)
 
     if steer.verbose:
         cv2.imwrite(ROOT_PATH+"output/{}_LPC_map.png".format(image_name), np.absolute(LPC_map))
