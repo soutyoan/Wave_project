@@ -41,13 +41,29 @@ public:
     ~SteerablePyramid();
 
     vector<vector<float> >* calicurate_polar();
+
+    // caliculate H0 values on the grid.
     vector<float>* calicurate_h0_filter();
+
+    // caliculate L0 values on the grid.
     vector<float>* calicurate_l0_filter();
+
+    // caliculate L filter values on the grid.
     vector<float>* calicurate_l_filter();
+
+    // caliculate H filter values on the grid.
     vector<float>* calicurate_h_filter();
+
+    // caliculate B filter values on the grid.
     vector<float>* calicurate_b_filter();
+
+    // create steerable pyramid
     void createPyramids();
+
+    // image reconstruction from steerable pyramid in Fourier domain.
     vector<float>* collapsePyramids();
+
+    // clear the steerable pyramid
     vector<float>* clearPyramids();
 
 

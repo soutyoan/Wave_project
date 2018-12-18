@@ -31,13 +31,13 @@ vector<float>* calicurate_h0_filter(){
     vector<float> RS = polar->at(0);
     vector<float> * fil = new vector<float>();
     // Possible parallelisation?
-    for (int i = 0; i < fil.size(); i++){
+    for (int i = 0; i < RS.size(); i++){
         if (RS[i] >= M_PI/2){
-            fil[i]->push_back(1);
+            fil->push_back(1);
         } else if (RS[i] < 0){
-            fil[i]->push_back(0);
+            fil->push_back(0);
         } else {
-            fil[i]->push_back(np.cos(M_PI/2 * log2(RS[i]/M_PI)));
+            fil->push_back(cos(M_PI/2 * log2(RS[i]/M_PI)));
         }
     }
     return fil;
@@ -48,13 +48,13 @@ vector<float>* calicurate_l0_filter(){
     vector<float> RS = polar->at(0);
     vector<float> * fil = new vector<float>();
     // Possible parallelisation
-    for (int i = 0; i < fil.size(); i++){
+    for (int i = 0; i < RS.size(); i++){
         if (RS[i] <= M_PI/2){
-            fil[i]->push_back(1);
+            fil->push_back(1);
         } else if (RS[i] >= 0){
-            fil[i]->push_back(0);
+            fil->push_back(0);
         } else {
-            fil[i]->push_back(np.cos(M_PI/2 * log2(2  *RS[i]/M_PI)));
+            fil->push_back(cos(M_PI/2 * log2(2  *RS[i]/M_PI)));
         }
     }
     return fil;
