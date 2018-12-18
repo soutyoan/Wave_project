@@ -19,7 +19,43 @@ SteerablePyramid::SteerablePyramid(Mat *_image,
 
 }
 
-SteerablePyramid::~SteerablePyramid(){
+vector<vector<float> >* calicurate_polar(){
 
+}
+
+vector<float>* calicurate_h0_filter(){
+
+}
+
+vector<float>* calicurate_l0_filter(){
+
+}
+
+vector<float>* calicurate_l_filter(){
+
+}
+
+vector<float>* calicurate_h_filter(){
+
+}
+
+vector<float>* calicurate_b_filter(){
+
+}
+
+void createPyramids(){
+
+}
+
+vector<float>* collapsePyramids(){
+
+}
+
+vector<float>* clearPyramids(){
+
+}
+
+SteerablePyramid::~SteerablePyramid(){
+    this->image->release(); 
 
 }

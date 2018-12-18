@@ -4,5 +4,8 @@ cmake_minimum_required(VERSION 2.8)
 include_directories(library)
 
 add_library(SteerablePyramid SHARED SteerablePyramid.cpp)
+
 add_executable(main main.cpp)
-target_link_libraries(main SteerablePyramid ${OpenCV_LIBS})
+# lopencv_imgproc, pour la version 1 de OpenCV,
+# a changer en lopencv_imgcodecs si utilisation de la v2
+target_link_libraries(main SteerablePyramid -lopencv_imgproc ${OpenCV_LIBS})

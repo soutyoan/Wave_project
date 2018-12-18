@@ -29,8 +29,6 @@ public:
     // Can set the program as verbose
     bool verbose;
 
-    SteerablePyramid(){}; 
-
     SteerablePyramid(Mat *image,
                     int xRes,
                     int yRes,
@@ -42,15 +40,15 @@ public:
 
     ~SteerablePyramid();
 
-    vector<vector<float> > calicurate_polar();
-    vector<float> calicurate_h0_filter();
-    vector<float> calicurate_l0_filter();
-    vector<float> calicurate_l_filter();
-    vector<float> calicurate_h_filter();
-    vector<float> calicurate_b_filter();
+    vector<vector<float> >* calicurate_polar();
+    vector<float>* calicurate_h0_filter();
+    vector<float>* calicurate_l0_filter();
+    vector<float>* calicurate_l_filter();
+    vector<float>* calicurate_h_filter();
+    vector<float>* calicurate_b_filter();
     void createPyramids();
-    vector<float> collapsePyramids();
-    vector<float> clearPyramids();
+    vector<float>* collapsePyramids();
+    vector<float>* clearPyramids();
 
 
 };
