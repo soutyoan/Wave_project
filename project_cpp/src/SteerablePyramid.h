@@ -66,6 +66,9 @@ public:
     // clear the steerable pyramid
     Mat* clearPyramids();
 
+private:
+    float alphak;
+
 
 };
 
