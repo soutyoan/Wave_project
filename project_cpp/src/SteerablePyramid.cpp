@@ -26,49 +26,83 @@ vector<vector<float> >* calicurate_polar(){
 
 }
 
-vector<float>* calicurate_h0_filter(){
-    vector<vector<float> > * polar = calicurate_polar();
-    vector<float> RS = polar->at(0);
-    vector<float> * fil = new vector<float>();
+Mat* calicurate_h0_filter(){
+    vector<vector<Mat> > * polar = calicurate_polar();
+    Mat RS = polar->at(0)[0];
+    Mat *fil = new Mat(size(xRes, yRes), CV_64FC1, 0);
     // Possible parallelisation?
-    for (int i = 0; i < RS.size(); i++){
-        if (RS[i] >= M_PI/2){
-            fil->push_back(1);
-        } else if (RS[i] < 0){
-            fil->push_back(0);
-        } else {
-            fil->push_back(cos(M_PI/2 * log2(RS[i]/M_PI)));
+    for (int i = 0; i < xRes; i++){
+        for (int j = 0; j < yRes; j++){
+            if (RS.at<float>(i, j) >= M_PI){
+                fil->at<float>(i, j) = 1;
+            } else if (RS.at<float>(i, j) >= M_PI/2) {
+                fil->at<float>(i, j) = cos(M_PI/2 * log2(RS.at<float>(i, j)/M_PI));
+            }
         }
     }
     return fil;
 }
 
-vector<float>* calicurate_l0_filter(){
-    vector<vector<float> > * polar = calicurate_polar();
-    vector<float> RS = polar->at(0);
-    vector<float> * fil = new vector<float>();
-    // Possible parallelisation
-    for (int i = 0; i < RS.size(); i++){
-        if (RS[i] <= M_PI/2){
-            fil->push_back(1);
-        } else if (RS[i] >= 0){
-            fil->push_back(0);
-        } else {
-            fil->push_back(cos(M_PI/2 * log2(2  *RS[i]/M_PI)));
+Mat* calicurate_l0_filter(){
+    vector<vector<Mat> > * polar = calicurate_polar();
+    Mat RS = polar->at(0)[0];
+    Mat *fil = new Mat(size(xRes, yRes), CV_64FC1, 0);
+    // Possible parallelisation?
+    for (int i = 0; i < xRes; i++){
+        for (int j = 0; j < yRes; j++){
+            if (RS.at<float>(i, j) >= 0){
+                fil->at<float>(i, j) = 1;
+            } else if (RS.at<float>(i, j) >= M_PI/2) {
+                fil->at<float>(i, j) = cos(M_PI/2 * log2(RS.at<float>(i, j)/M_PI));
+            }
         }
     }
     return fil;
 }
 
-vector<float>* calicurate_l_filter(){
-
+vector<Mat* > * calicurate_l_filter(){
+    vector<vector<Mat> > * polar = calicurate_polar();
+    vector<Mat *> * f = new vector<Mat* >(n);
+    for (int i = 0; i < n; i++){
+        Mat* m = new Mat(size(xRes, yRes), CV_64FC1, 0);
+        for (int x = 0; x < xRes; x++){
+            for(int y = 0; y < yRes; y++){
+                if (RS.at<float>(i, j) >= M_PI/2){
+                    m->at<float>(i, j) = 0;
+                } else if (RS.at<float>(i, j) <= M_PI/4){
+                    m->at<float>(i, j) = 1;
+                } else {
+                    m->at<float>(i, j) = cos(M_PI/2 * log2(4 * RS.at<float>(i, j)/M_PI));
+                }
+            }
+        }
+        f[n] = m;
+    }
+    return f;
 }
 
-vector<float>* calicurate_h_filter(){
-
+vector<Mat* > * calicurate_h_filter(){
+    vector<vector<Mat> > * polar = calicurate_polar();
+    vector<Mat *> * f = new vector<Mat* >(n);
+    for (int i = 0; i < n; i++){
+        Mat* m = new Mat(size(xRes, yRes), CV_64FC1, 0);
+        for (int x = 0; x < xRes; x++){
+            for(int y = 0; y < yRes; y++){
+                if (RS.at<float>(i, j) >= M_PI/2){
+                    m->at<float>(i, j) = 1;
+                } else if (RS.at<float>(i, j) <= M_PI/4){
+                    m->at<float>(i, j) = 0;
+                } else {
+                    m->at<float>(i, j) = cos(M_PI/2 * log2(2 * RS.at<float>(i, j)/M_PI));
+                }
+            }
+        }
+        f[n] = m;
+    }
+    return f;
 }
 
-vector<float>* calicurate_b_filter(){
+Mat* calicurate_b_filter(){
 
 }
 
@@ -76,11 +110,11 @@ void createPyramids(){
 
 }
 
-vector<float>* collapsePyramids(){
+Mat* collapsePyramids(){
 
 }
 
-vector<float>* clearPyramids(){
+Mat* clearPyramids(){
 
 }
 
