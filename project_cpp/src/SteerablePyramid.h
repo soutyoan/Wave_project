@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <iostream>
+#include <utils>
 
 using namespace cv;
 using namespace std;
@@ -40,7 +41,7 @@ public:
 
     ~SteerablePyramid();
 
-    vector<vector<float> >* calicurate_polar();
+    vector<vector<float> >* caliculate_polar();
 
     // caliculate H0 values on the grid.
     vector<float>* calicurate_h0_filter();

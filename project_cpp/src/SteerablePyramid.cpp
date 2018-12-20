@@ -22,12 +22,23 @@ SteerablePyramid::SteerablePyramid(Mat *_image,
 
 }
 
-vector<vector<float> >* calicurate_polar(){
+vector<vector<Mat> >* caliculate_polar(){
+    vector<vector<Mat*>>* res;
+    for (int i=0; i<this->n; i++) {
+        // Computation polar coordinates (radius) on the grid
+        float _tmp = 2.0**i;
+        size_t grid_x = this->image->rows / _tmp;
+        size_t grid_y = this->image->rows / _tmp;
+        vector<float> _wx = linspace<float>(-M_PI, M_PI, grid_x);
+        vector<float> _wy = linspace<float>(-M_PI, M_PI, grid_y);
+        Mat *_rs = new zeros(grid_x, grid_y, CV_32F);
+
+    }
 
 }
 
 vector<float>* calicurate_h0_filter(){
-    vector<vector<float> > * polar = calicurate_polar();
+    vector<vector<float> > * polar = caliculate_polar();
     vector<float> RS = polar->at(0);
     vector<float> * fil = new vector<float>();
     // Possible parallelisation?
@@ -44,7 +55,7 @@ vector<float>* calicurate_h0_filter(){
 }
 
 vector<float>* calicurate_l0_filter(){
-    vector<vector<float> > * polar = calicurate_polar();
+    vector<vector<float> > * polar = caliculate_polar();
     vector<float> RS = polar->at(0);
     vector<float> * fil = new vector<float>();
     // Possible parallelisation
