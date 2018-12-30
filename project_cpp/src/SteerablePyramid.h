@@ -5,7 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <iostream>
-#include <utils>
+#include "utils.h"
 
 using namespace cv;
 using namespace std;
@@ -41,7 +41,7 @@ public:
 
     ~SteerablePyramid();
 
-    vector<vector<float> >* caliculate_polar();
+    vector<vector<Mat> >* caliculate_polar();
 
     // caliculate H0 values on the grid.
     Mat* calicurate_h0_filter();
@@ -56,7 +56,7 @@ public:
     vector<Mat*> * calicurate_h_filter();
 
     // caliculate B filter values on the grid.
-    Mat calicurate_b_filter();
+    Mat* calicurate_b_filter(int i, int j);
 
     // create steerable pyramid
     void createPyramids();

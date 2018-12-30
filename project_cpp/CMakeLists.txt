@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(Wave_project)
 
+include(CTest)
+
 FIND_PACKAGE(OpenMP REQUIRED)
 message(STATUS $ENV{OPENMP_FOUND})
 if (OPENMP_FOUND)
@@ -13,6 +15,12 @@ endif()
 
 find_package( OpenCV REQUIRED )
 message(STATUS $ENV{OPENCV_FOUND})
+
+if(NOT "${OPENCV_VERSION}" STRGREATER "2")
+    set(OpenLibraries "-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs")
+else()
+    set(OpenLibraries "-lopencv_imgproc")
+endif()
 
 #SOURCES
 add_subdirectory(src)
