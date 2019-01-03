@@ -1,5 +1,5 @@
 version: v1.0
-name: First pipeline example
+name: Pipeline C++ docker
 agent:
   machine:
     type: e1-standard-2
@@ -18,7 +18,15 @@ blocks:
           - ls -1
           - echo $APP_ENV
           - echo "Docker build..."
+          - pwd
+          - ls
+          - sudo apt-get install libopencv-dev -y
           - echo "done"
+          - cd project_cpp
+          - mkdir bin
+          - cd bin
+          - cmake ..
+          - make
 
   - name: "Smoke tests"
     task:
