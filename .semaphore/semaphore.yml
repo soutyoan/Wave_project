@@ -12,7 +12,7 @@ blocks:
         - name: APP_ENV
           value: prod
       jobs:
-      - name: Docker build
+      - name: Application build
         commands:
           - checkout
           - ls -1

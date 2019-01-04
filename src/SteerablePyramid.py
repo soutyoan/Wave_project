@@ -399,7 +399,7 @@ class SteerablePyramid():
 			# extract the central part of DFT
 			down_image = np.zeros((2*quant4y, 2*quant4x), dtype=complex)
 			down_image = dl1[quant4y:3*quant4y, quant4x:3*quant4x]
-#
+
 			f_ishift = np.fft.ifftshift(down_image)
 			img_back = np.fft.ifft2(f_ishift)
 			self.LOW.append({'f':down_image, 's':img_back})
