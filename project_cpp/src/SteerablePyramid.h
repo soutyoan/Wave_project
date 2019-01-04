@@ -50,13 +50,13 @@ public:
     void calicurate_l0_filter(Mat &fil, vector<Mat*> &RS);
 
     // caliculate L filter values on the grid.
-    void calicurate_l_filter(vector<Mat *> &f, vector<Mat*> &RS);
+    void calicurate_l_filter(int i, Mat &f, vector<Mat*> &RS);
 
     // caliculate H filter values on the grid.
     void calicurate_h_filter(vector<Mat *> &f, vector<Mat*> &RS);
 
     // caliculate B filter values on the grid.
-    void calicurate_b_filter(int i, int j, Mat &fil, const vector<Mat> &AT);
+    void calicurate_b_filter(int i, int j, Mat &fil, const vector<Mat *> &AT);
 
     // create steerable pyramid
     void createPyramids();
