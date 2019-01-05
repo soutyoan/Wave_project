@@ -135,6 +135,8 @@ void SteerablePyramid::createPyramids(){
     vector<Mat *> RS; // calculate RS
     vector<Mat *> AT; // calculate AT
 
+    Mat imgBack; 
+
     // Create all the matrices used during the collapse function
     Mat h0f; 
     Mat h0s;
@@ -143,7 +145,10 @@ void SteerablePyramid::createPyramids(){
 
     // Find library for fast fourier transform
     Mat ft; 
-    Mat ft_shift; 
+    Mat _ft; 
+
+    dft((*image), ft); 
+    idft(ft, _ft); 
 
     ///// THREAD 1 in openmp use thread ID //////
 
@@ -152,13 +157,20 @@ void SteerablePyramid::createPyramids(){
     calicurate_h0_filter(h0, RS); 
 
     h0 = h0.mul(ft_shift);  // calculation of h0
-    Mat f_ishift;  //ishift
-
+    Mat f_ishift;  
+    dft(h0, f_ishift); // FFT opencv
+    idft(f_ishift, imgBack); // IFFT opencv
 
     //// THREAD 2 in openmp use thread ID ///// 
 
     Mat l0(Size(xRes, yRes), CV_64FC1); 
     calicurate_l0_filter(l0, RS);
+
+    l0 = l0.mul(ft_shift);  // calculation of h0
+    Mat f_ishift;  
+
+    dft(h0, f_ishift); // FFT opencv
+    idft(f_ishift, imgBack); // IFFT opencv
 
     Mat lastImage = Mat_<std::complex<float> >(l0); 
 
