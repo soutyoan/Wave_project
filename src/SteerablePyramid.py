@@ -269,17 +269,6 @@ class SteerablePyramid():
 
 			_f.append(fil)
 
-			# if i == 0 and self.verbose == 1:
-			#
-			# 	plt.clf()
-			# 	plt.contourf(self.WX[i], self.WY[i], fil)
-			# 	plt.axes().set_aspect('equal', 'datalim')
-			# 	plt.colorbar()
-			# 	plt.xlabel('x')
-			# 	plt.ylabel('y')
-			# 	plt.title('Highpass filter of Layer{} : Fourier Domain'.format(str(i)))
-			# 	plt.savefig(self.OUT_PATH.format('fil_highpass-layer{}.png'.format(str(i))))
-
 		return _f
 
 	def calicurate_b_filters(self):
@@ -300,6 +289,8 @@ class SteerablePyramid():
 			for k in range(self.K):
 
 				if k % size == rank:
+
+					print(i, k, rank)
 
 					# caliculate Bk values on the grid.
 					fil_= np.zeros_like(self.GRID[i], dtype=complex)
@@ -322,37 +313,30 @@ class SteerablePyramid():
 					if rank != 0:
 						# After the MPI computation we need to send back to the first thread the result
 						comm.send(fil_, dest=0, tag=k)
+					else:
+						fils_[k] = fil_
 
 				if rank == 0 and k%size != rank:
 					data = comm.recv(source=k%size, tag=k)
 					fils_[k] = data
 
-				# if i == 0 and self.verbose == 1:
-				#
-				# 	plt.clf()
-				# 	plt.contourf(self.WX[i], self.WY[i], np.abs(fil_))
-				# 	plt.axes().set_aspect('equal', 'datalim')
-				# 	plt.colorbar()
-				# 	plt.xlabel('x')
-				# 	plt.ylabel('y')
-				# 	plt.title('Bandpass filter of layer{} : Fourier Domain'.format(str(i)))
-				# 	plt.savefig(self.OUT_PATH.format('fil_bandpass{}-layer{}.png'.format(str(k), str(i))))
-				#
-				# 	plt.clf()
-				# 	plt.contourf(self.WX[i], self.WY[i], np.abs(fil_ * self.L0_FILT))
-				# 	plt.axes().set_aspect('equal', 'datalim')
-				# 	plt.colorbar()
-				# 	plt.xlabel('x')
-				# 	plt.ylabel('y')
-				# 	plt.title('Bandpass * Lowpass filter of layer{}'.format(str(i)))
-				# 	plt.savefig(self.OUT_PATH.format('fil_lo-bandpass{}-layer{}.png'.format(str(k), str(i))))
+			comm.Barrier()
 
-			f_.append(fils_)
+			if rank == 0:
+				f_.append(fils_)
+
+		print("calculating b filters done")
+
+		while rank != 0:
+			pass
 
 		return f_
 
 	# create steerable pyramid
 	def create_pyramids(self):
+
+		####### We want to put this two calculations, low filter 
+		# and high filter on two different threads ######
 
 		# DFT
 		ft = np.fft.fft2(self.IMAGE_ARRAY)
@@ -382,55 +366,70 @@ class SteerablePyramid():
 			_tmp = np.absolute(img_back)
 			Image.fromarray(np.uint8(_tmp), mode='L').save(self.OUT_PATH.format('{}-l0.png'.format(self.IMAGE_NAME)))
 
+		comm = MPI.COMM_WORLD
+		rank = comm.Get_rank()
+		size = comm.Get_size()
+
 		# apply bandpass filter(B) and downsample iteratively. save pyramid
 		_last = l0
 		for i in range(self.N):
-			_t = []
+
+			if rank == 0:
+				_t = [0] * len(self.B_FILT[i])
+
 			for j in range(len(self.B_FILT[i])):
-				_tmp = {'f':None, 's':None}
-				lb = _last * self.B_FILT[i][j]
-				f_ishift = np.fft.ifftshift(lb)
+
+				if j % size == rank:
+					_tmp = {'f':None, 's':None}
+					lb = _last * self.B_FILT[i][j]
+					f_ishift = np.fft.ifftshift(lb)
+					img_back = np.fft.ifft2(f_ishift)
+					# frequency
+					_tmp['f'] = lb
+					# space
+					_tmp['s'] = img_back
+				
+				if rank != 0:
+					# After the MPI computation we need to send back to the first thread the result
+					comm.send(_tmp, dest=0, tag=j)
+				else:
+					_t[j] = _tmp
+
+				if rank == 0 and j%size != rank:
+					data = comm.recv(source=j%size, tag=j)
+					_t[j] = data
+
+			commm.Barrier() # Wait for all threads
+
+			if rank == 0:
+
+				self.BND.append(_t.copy())
+
+				# apply lowpass filter(L) to image(Fourier Domain) downsampled.
+				l1 = _last * self.L_FILT[i]
+
+				## Downsampling
+				# filter for cutting off high frequerncy(>np.pi/2).
+				# (Attn) steerable pyramid is basically anti-aliases. see http://www.cns.nyu.edu/pub/eero/simoncelli95b.pdf
+				# this filter is not needed actually ,but prove anti-aliases characteristic of the steerable filters.
+				down_fil = np.zeros(_last.shape)
+				quant4x = int(down_fil.shape[1]/4)
+				quant4y = int(down_fil.shape[0]/4)
+				down_fil[quant4y:3*quant4y, quant4x:3*quant4x] = 1
+
+				# apply downsample filter.
+				dl1 = l1 * down_fil
+
+				# extract the central part of DFT
+				down_image = np.zeros((2*quant4y, 2*quant4x), dtype=complex)
+				down_image = dl1[quant4y:3*quant4y, quant4x:3*quant4x]
+	#
+				f_ishift = np.fft.ifftshift(down_image)
 				img_back = np.fft.ifft2(f_ishift)
-				# frequency
-				_tmp['f'] = lb
-				# space
-				_tmp['s'] = img_back
-				_t.append(_tmp)
+				self.LOW.append({'f':down_image, 's':img_back})
 
-				if self.verbose == 1:
-					_tmp = np.absolute(img_back.real)
-					Image.fromarray(np.uint8(_tmp), mode='L').save(self.OUT_PATH.format('{}-layer{}-lb{}.png'.format(self.IMAGE_NAME, str(i), str(j))))
-
-			self.BND.append(_t.copy())
-
-			# apply lowpass filter(L) to image(Fourier Domain) downsampled.
-			l1 = _last * self.L_FILT[i]
-
-			## Downsampling
-			# filter for cutting off high frequerncy(>np.pi/2).
-			# (Attn) steerable pyramid is basically anti-aliases. see http://www.cns.nyu.edu/pub/eero/simoncelli95b.pdf
-			# this filter is not needed actually ,but prove anti-aliases characteristic of the steerable filters.
-			down_fil = np.zeros(_last.shape)
-			quant4x = int(down_fil.shape[1]/4)
-			quant4y = int(down_fil.shape[0]/4)
-			down_fil[quant4y:3*quant4y, quant4x:3*quant4x] = 1
-
-			# apply downsample filter.
-			dl1 = l1 * down_fil
-
-			# extract the central part of DFT
-			down_image = np.zeros((2*quant4y, 2*quant4x), dtype=complex)
-			down_image = dl1[quant4y:3*quant4y, quant4x:3*quant4x]
-#
-			f_ishift = np.fft.ifftshift(down_image)
-			img_back = np.fft.ifft2(f_ishift)
-			self.LOW.append({'f':down_image, 's':img_back})
-
-			if self.verbose == 1:
-				_tmp = np.absolute(img_back)
-				Image.fromarray(np.uint8(_tmp), mode='L').save(self.OUT_PATH.format('{}-residual-layer{}.png'.format(self.IMAGE_NAME, str(i))))
-
-			_last = down_image
+				_last = down_image
+				_last = comm.bcast(_last, root=0) # Broadcast the data to all threads
 
 		# lowpass residual
 		self.LR['f'] = _last.copy()
