@@ -16,9 +16,8 @@ blocks:
         commands:
           - checkout
           - ls -1
-          - echo $APP_ENV
-          - echo "Docker build..."
-          - echo "done"
+          - pip install -r requirements.txt
+          - python3 src/LCP_computation.py
 
   - name: "Smoke tests"
     task:

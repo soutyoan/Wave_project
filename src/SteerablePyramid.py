@@ -50,11 +50,13 @@ import math
 import sys, os
 import logging
 
+from mpi4py import MPI
+
 SCRIPT_NAME = os.path.basename(__file__)
 # logging
-LOG_FMT = "[%(name)s] %(asctime)s %(levelname)s %(lineno)s %(message)s"
-logging.basicConfig(level=logging.DEBUG, format=LOG_FMT)
-LOGGER = logging.getLogger(os.path.basename(__file__))
+# LOG_FMT = "[%(name)s] %(asctime)s %(levelname)s %(lineno)s %(message)s"
+# logging.basicConfig(level=logging.DEBUG, format=LOG_FMT)
+# LOGGER = logging.getLogger(os.path.basename(__file__))
 
 '''
 
