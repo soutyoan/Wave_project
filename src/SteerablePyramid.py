@@ -283,29 +283,49 @@ class SteerablePyramid():
 		return _f
 
 	def calicurate_b_filters(self):
+
+		print("Calculating b filters")
+
 		f_ = []
+
+		comm = MPI.COMM_WORLD
+		rank = comm.Get_rank()
+		size = comm.Get_size()
+
 		for i in range(0, self.N):
-			fils_ = []
+
+			if rank == 0:
+				fils_ = [0] * self.K
 
 			for k in range(self.K):
-				# caliculate Bk values on the grid.
-				fil_= np.zeros_like(self.GRID[i], dtype=complex)
-				th1= self.AT[i].copy()
-				th2= self.AT[i].copy()
 
-				th1[np.where(self.AT[i] - k*np.pi/self.K < -np.pi)] += 2.*np.pi
-				th1[np.where(self.AT[i] - k*np.pi/self.K > np.pi)] -= 2.*np.pi
-				ind_ = np.where(np.absolute(th1 - k*np.pi/self.K) <= np.pi/2.)
-				fil_[ind_] = self.ALPHAK * (np.cos(th1[ind_] - k*np.pi/self.K))**(self.K-1)
-#				fil_[ind_] = complex(0,1)**k * self.ALPHAK * (np.cos(th1[ind_] - k*np.pi/self.K))**(self.K-1)
-				th2[np.where(self.AT[i] + (self.K-k)*np.pi/self.K < -np.pi)] += 2.*np.pi
-				th2[np.where(self.AT[i] + (self.K-k)*np.pi/self.K > np.pi)] -= 2.*np.pi
-				ind_ = np.where(np.absolute(th2 + (self.K-k) * np.pi/self.K) <= np.pi/2.)
-				fil_[ind_] = self.ALPHAK * (np.cos(th2[ind_]+ (self.K-k) * np.pi/self.K))**(self.K-1)
-#				fil_[ind_] = complex(0,1)**k * self.ALPHAK * (np.cos(th2[ind_]+ (self.K-k) * np.pi/self.K))**(self.K-1)
+				if k % size == rank:
 
-				fil_= self.H_FILT[i] * fil_
-				fils_.append(fil_.copy())
+					# caliculate Bk values on the grid.
+					fil_= np.zeros_like(self.GRID[i], dtype=complex)
+					th1= self.AT[i].copy()
+					th2= self.AT[i].copy()
+
+					th1[np.where(self.AT[i] - k*np.pi/self.K < -np.pi)] += 2.*np.pi
+					th1[np.where(self.AT[i] - k*np.pi/self.K > np.pi)] -= 2.*np.pi
+					ind_ = np.where(np.absolute(th1 - k*np.pi/self.K) <= np.pi/2.)
+					fil_[ind_] = self.ALPHAK * (np.cos(th1[ind_] - k*np.pi/self.K))**(self.K-1)
+	#				fil_[ind_] = complex(0,1)**k * self.ALPHAK * (np.cos(th1[ind_] - k*np.pi/self.K))**(self.K-1)
+					th2[np.where(self.AT[i] + (self.K-k)*np.pi/self.K < -np.pi)] += 2.*np.pi
+					th2[np.where(self.AT[i] + (self.K-k)*np.pi/self.K > np.pi)] -= 2.*np.pi
+					ind_ = np.where(np.absolute(th2 + (self.K-k) * np.pi/self.K) <= np.pi/2.)
+					fil_[ind_] = self.ALPHAK * (np.cos(th2[ind_]+ (self.K-k) * np.pi/self.K))**(self.K-1)
+	#				fil_[ind_] = complex(0,1)**k * self.ALPHAK * (np.cos(th2[ind_]+ (self.K-k) * np.pi/self.K))**(self.K-1)
+
+					fil_= self.H_FILT[i] * fil_
+
+					if rank != 0:
+						# After the MPI computation we need to send back to the first thread the result
+						comm.send(fil_, dest=0, tag=k)
+
+				if rank == 0 and k%size != rank:
+					data = comm.recv(source=k%size, tag=k)
+					fils_[k] = data
 
 				# if i == 0 and self.verbose == 1:
 				#
