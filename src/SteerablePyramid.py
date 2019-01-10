@@ -335,7 +335,7 @@ class SteerablePyramid():
 	# create steerable pyramid
 	def create_pyramids(self):
 
-		####### We want to put this two calculations, low filter 
+		####### We want to put this two calculations, low filter
 		# and high filter on two different threads ######
 
 		# DFT
@@ -388,7 +388,7 @@ class SteerablePyramid():
 					_tmp['f'] = lb
 					# space
 					_tmp['s'] = img_back
-				
+
 				if rank != 0:
 					# After the MPI computation we need to send back to the first thread the result
 					comm.send(_tmp, dest=0, tag=j)
@@ -426,10 +426,46 @@ class SteerablePyramid():
 	#
 				f_ishift = np.fft.ifftshift(down_image)
 				img_back = np.fft.ifft2(f_ishift)
-				self.LOW.append({'f':down_image, 's':img_back})
+				# frequency
+				_tmp['f'] = lb
+				# space
+				_tmp['s'] = img_back
+				_t.append(_tmp)
 
-				_last = down_image
-				_last = comm.bcast(_last, root=0) # Broadcast the data to all threads
+				if self.verbose == 1:
+					_tmp = np.absolute(img_back.real)
+					Image.fromarray(np.uint8(_tmp), mode='L').save(self.OUT_PATH.format('{}-layer{}-lb{}.png'.format(self.IMAGE_NAME, str(i), str(j))))
+
+			self.BND.append(_t.copy())
+
+			# apply lowpass filter(L) to image(Fourier Domain) downsampled.
+			l1 = _last * self.L_FILT[i]
+
+			## Downsampling
+			# filter for cutting off high frequerncy(>np.pi/2).
+			# (Attn) steerable pyramid is basically anti-aliases. see http://www.cns.nyu.edu/pub/eero/simoncelli95b.pdf
+			# this filter is not needed actually ,but prove anti-aliases characteristic of the steerable filters.
+			down_fil = np.zeros(_last.shape)
+			quant4x = int(down_fil.shape[1]/4)
+			quant4y = int(down_fil.shape[0]/4)
+			down_fil[quant4y:3*quant4y, quant4x:3*quant4x] = 1
+
+			# apply downsample filter.
+			dl1 = l1 * down_fil
+
+			# extract the central part of DFT
+			down_image = np.zeros((2*quant4y, 2*quant4x), dtype=complex)
+			down_image = dl1[quant4y:3*quant4y, quant4x:3*quant4x]
+
+			f_ishift = np.fft.ifftshift(down_image)
+			img_back = np.fft.ifft2(f_ishift)
+			self.LOW.append({'f':down_image, 's':img_back})
+
+			if self.verbose == 1:
+				_tmp = np.absolute(img_back)
+				Image.fromarray(np.uint8(_tmp), mode='L').save(self.OUT_PATH.format('{}-residual-layer{}.png'.format(self.IMAGE_NAME, str(i))))
+
+			_last = down_image
 
 		# lowpass residual
 		self.LR['f'] = _last.copy()

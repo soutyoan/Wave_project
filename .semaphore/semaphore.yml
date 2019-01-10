@@ -1,5 +1,5 @@
 version: v1.0
-name: First pipeline example
+name: Pipeline C++ docker
 agent:
   machine:
     type: e1-standard-2
@@ -12,10 +12,11 @@ blocks:
         - name: APP_ENV
           value: prod
       jobs:
-      - name: Docker build
+      - name: Application build
         commands:
           - checkout
           - ls -1
+<<<<<<< HEAD
           - pip install -r requirements.txt
           #- python3 src/LCP_computation.py
 
@@ -60,3 +61,17 @@ blocks:
         commands:
           - checkout
           - echo "make docker.push"
+=======
+          - echo $APP_ENV
+          - echo "Docker build..."
+          - pwd
+          - ls
+          - sudo apt-get install libopencv-dev -y
+          - echo "done"
+          - cd project_cpp
+          - mkdir bin
+          - cd bin
+          - cmake ..
+          - make
+          - make test
+>>>>>>> 9c987ce6e7a9458778e3cd458720b05accf0b754
