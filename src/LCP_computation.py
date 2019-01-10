@@ -146,6 +146,7 @@ def compute_LPC_map(steer, C):
     """
     res = np.zeros(steer.IMAGE_ARRAY.size)
     res = res.flatten()
+    print("LCP map computation")
     bar = progressbar.ProgressBar(max_value=res.shape[0])
     for k in range(res.shape[0]):
         res[k] = compute_spatial_LPC(steer, k, C)
@@ -153,7 +154,7 @@ def compute_LPC_map(steer, C):
     return res.reshape(steer.IMAGE_ARRAY.shape[:2])
 
 
-def compute_LPC_index(steer, C, beta):
+def compute_LPC_index(steer, C, beta, K=1.0):
     """
         Computation of LPC index.
 
@@ -165,13 +166,21 @@ def compute_LPC_index(steer, C, beta):
                         constant for stabilisation purposes
         beta            float > 0
                         constant of weighting LPC coefficients
+        K               float in [0, 1.0]n optional
+                        rate of chosen coefficients from LCP map, default = 1.0
+                        (i.e all the coefficients are chosen by default)
 
         Returns
         -------
         float in [0, 1]
                         LPC-based sharpness index of steer.IMAGE_ARRAY
     """
-    # TODO
+    print("LCP index computation")
+    LPC_map = compute_LPC_map(steer, C)
+    nb_coeffs = int(K * LPC_map.size)
+    sorted_LPC = np.sort(LPC_map.flatten())[:nb_coeffs]
+    weights = np.exp(np.array([-(k-1)/(nb_coeffs-1)/beta for k in range(nb_coeffs)]))
+    return np.dot(sorted_LPC, weights) / np.sum(weights)
 
 if (__name__ == "__main__"):
     parser = argparse.ArgumentParser(description="Wavelets project 2018-2019 : Sharpness index based on Local Phase Coherence")
@@ -194,10 +203,12 @@ if (__name__ == "__main__"):
     steer = SteerablePyramid(image, xres, yres, args.depth, args.orientation, image_name, ROOT_PATH+"output", args.verbose)
     steer.create_pyramids()
 
-    # Computation of LPC map
+    # Computation of LCP map
     LPC_map = compute_LPC_map(steer, args.constant)
 
-    print(LPC_map)
+    # Computation of LPC index
+    print(compute_LPC_index(steer, args.constant, args.beta))
+
 
     cv2.imwrite(ROOT_PATH+"output/{}_LPC_map.png".format(image_name), np.absolute(250*LPC_map))
 
