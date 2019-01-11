@@ -16,10 +16,13 @@ endif()
 find_package( OpenCV REQUIRED )
 message(STATUS $ENV{OPENCV_FOUND})
 
-if(NOT "${OPENCV_VERSION}" STRGREATER "2")
+message("OpenCV version: ${OpenCV_VERSION}")
+if("${OpenCV_VERSION}" STRGREATER "3")
+    message("GREATER THAN 3")
     set(OpenLibraries "-lopencv_core -lopencv_highgui -lopencv_imgproc -lopencv_imgcodecs")
 else()
-    set(OpenLibraries "-lopencv_imgproc")
+    message("LOWER THAN 3")
+    set(OpenLibraries "-lopencv_imgproc -lopencv_core -lopencv_highgui")
 endif()
 
 #SOURCES
