@@ -145,6 +145,7 @@ void SteerablePyramid::createPyramids(){
     Mat ft;
     dct((*image), ft);
     Mat ft_shift;
+    ft_shift(ft, ft_shift); 
 
     ///// THREAD 1 in openmp use thread ID //////
 

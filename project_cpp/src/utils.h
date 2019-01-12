@@ -25,4 +25,17 @@ std::vector<T> linspace(T a, T b, size_t N) {
     return xs;
 }
 
+/*
+Our own implementation of the ft Shift
+Inversing blocks in the Matrix
+Matrix :     1 2
+             3 4
+
+fftshift :   4 3
+          2 1
+*/
+void ft_shift(){
+
+}
+
 #endif
