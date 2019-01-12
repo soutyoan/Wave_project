@@ -8,7 +8,7 @@ int factorial(int n)
   return (n == 1 || n == 0) ? 1 : factorial(n - 1) * n;
 }
 
-SteerablePyramid::SteerablePyramid(Mat *_image,
+SteerablePyramid::SteerablePyramid(Mat _image,
                 int _xRes,
                 int _yRes,
                 int _n,
@@ -26,6 +26,13 @@ SteerablePyramid::SteerablePyramid(Mat *_image,
     this->verbose = _verbose;
 
     this->alphak = 	pow(2, (k-1)) * factorial(k-1)/sqrt(k * factorial(2*(k-1)));
+
+    cout << xRes << "\n"; 
+    cout << image.rows << "\n"; 
+
+    assert(xRes%2 == 0); // Some function like ft shift not implemented 
+    // for odd numbers
+    assert(yRes%2 == 0); 
 }
 
 /*
@@ -34,12 +41,13 @@ matrices one at a time
 */
 void SteerablePyramid::caliculate_one_polar(Mat* RS, Mat* AT, int i){
     float _tmp = pow(2.0, i);
-    size_t nx = this->image->rows / _tmp;
-    size_t ny = this->image->rows / _tmp;
+    size_t nx = this->image.rows / _tmp;
+    size_t ny = this->image.cols / _tmp;
     vector<float> _wx = linspace<float>(-M_PI, M_PI, nx);
     vector<float> _wy = linspace<float>(-M_PI, M_PI, ny);
-    RS = polar_coordinates(_wx, _wy, nx, ny);
-    AT = angular_coordinates(_wx, _wy, nx, ny);
+    cout << _wx.size() << " " << _wy.size() << " " << nx << " " << ny << "\n"; 
+    RS = polar_coordinates<float>(_wx, _wy, nx, ny);
+    AT = angular_coordinates<float>(_wx, _wy, nx, ny);
 }
 
 void SteerablePyramid::caliculate_polar(vector<Mat*> &RS, vector<Mat *> &AT){
@@ -150,29 +158,31 @@ void SteerablePyramid::createPyramids(){
     this->caliculate_polar(RS, AT);
 
     // Create all the matrices used during the collapse function
-    Mat h0f;
-    Mat h0s;
-    Mat l0f;
-    Mat l0s;
+    Mat h0f(Size(xRes, yRes), CV_64FC1);
+    Mat h0s(Size(xRes, yRes), CV_64FC1);
+    Mat l0f(Size(xRes, yRes), CV_64FC1);
+    Mat l0s(Size(xRes, yRes), CV_64FC1);
 
     // Find library for fast fourier transform
-    Mat ft; 
+    Mat ft(Size(xRes, yRes), CV_64FC1); 
     Mat _ft(Size(xRes, yRes), CV_64FC1); 
-
-    dft((*image), ft); 
-    ft_shift(ft, _ft); 
 
     ///// THREAD 1 in openmp use thread ID //////
 
-    Mat imgBack; 
+    Mat imgBack(Size(xRes, yRes), CV_64FC1); 
+
+    cout << (image).at<float>(5, 25) << "\n"; 
+
+    dft((image), ft); 
+    ft_shift(ft, _ft); 
 
     // Create HO filter
     Mat h0(Size(xRes, yRes), CV_64FC1);
     calicurate_h0_filter(h0, RS);
 
     h0 = h0.mul(_ft);  // calculation of h0
-    Mat f_ishift;  
-    dft(h0, f_ishift); // FFT opencv
+    Mat f_ishift(Size(xRes, yRes), CV_64FC1);  
+    ft_shift(h0, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
 
     //// THREAD 2 in openmp use thread ID /////
@@ -247,6 +257,5 @@ void SteerablePyramid::clearPyramids(Mat &f){
 }
 
 SteerablePyramid::~SteerablePyramid(){
-    this->image->release();
 
 }

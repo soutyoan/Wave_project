@@ -14,7 +14,7 @@ class SteerablePyramid{
 
 public:
     // Matrix of the image
-    Mat *image;
+    Mat image;
     // Horizontal resolution
     int xRes;
     // Vertical resolution
@@ -30,7 +30,7 @@ public:
     // Can set the program as verbose
     bool verbose;
 
-    SteerablePyramid(Mat *image,
+    SteerablePyramid(Mat image,
                     int xRes,
                     int yRes,
                     int n,
