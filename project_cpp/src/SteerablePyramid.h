@@ -41,6 +41,8 @@ public:
 
     ~SteerablePyramid();
 
+    void caliculate_one_polar(Mat* RS, Mat* AT, int i); 
+
     void caliculate_polar(vector<Mat *> &RS, vector<Mat *> &AT);
 
     // caliculate H0 values on the grid.

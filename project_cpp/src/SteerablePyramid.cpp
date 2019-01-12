@@ -28,21 +28,29 @@ SteerablePyramid::SteerablePyramid(Mat *_image,
     this->alphak = 	pow(2, (k-1)) * factorial(k-1)/sqrt(k * factorial(2*(k-1)));
 }
 
+/*
+in order to do a good parallelization we need to be able to calculate these
+matrices one at a time
+*/
+void SteerablePyramid::caliculate_one_polar(Mat* RS, Mat* AT, int i){
+    float _tmp = pow(2.0, i);
+    size_t nx = this->image->rows / _tmp;
+    size_t ny = this->image->rows / _tmp;
+    vector<float> _wx = linspace<float>(-M_PI, M_PI, nx);
+    vector<float> _wy = linspace<float>(-M_PI, M_PI, ny);
+    RS = polar_coordinates(_wx, _wy, nx, ny);
+    AT = angular_coordinates(_wx, _wy, nx, ny);
+}
+
 void SteerablePyramid::caliculate_polar(vector<Mat*> &RS, vector<Mat *> &AT){
 
     for (int i=0; i < this->n; i++) {
         // Computation polar coordinates (radius) on the grid
-        float _tmp = pow(2.0, i);
-        size_t nx = this->image->rows / _tmp;
-        size_t ny = this->image->rows / _tmp;
-        vector<float> _wx = linspace<float>(-M_PI, M_PI, nx);
-        vector<float> _wy = linspace<float>(-M_PI, M_PI, ny);
-        Mat* _rs = polar_coordinates(_wx, _wy, nx, ny);
-        Mat* _at = angular_coordinates(_wx, _wy, nx, ny);
+        Mat* _rs; 
+        Mat* _at; 
+        caliculate_one_polar(_rs, _at, i); 
         RS.push_back(_rs);
         AT.push_back(_at);
-        delete _rs;
-        delete _at;
     }
 }
 
