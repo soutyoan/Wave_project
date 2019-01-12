@@ -101,8 +101,9 @@ void SteerablePyramid::calicurate_l0_filter(Mat &fil, vector<Mat> &RS){
 
 void SteerablePyramid::calicurate_l_filter(int i, Mat &f, vector<Mat> &RS){
     Mat RS_0 = RS[0];
-    for (int x = 0; x < xRes; x++){
-        for(int y = 0; y < yRes; y++){
+    float _tmp = pow(2.0, i);
+    for (int x = 0; x < xRes/_tmp; x++){
+        for(int y = 0; y < yRes/_tmp; y++){
             if (RS_0.at<float>(x, y) >= M_PI/2){
                 f.at<float>(x, y) = 0;
             } else if (RS_0.at<float>(x, y) <= M_PI/4){
@@ -136,7 +137,7 @@ void SteerablePyramid::calicurate_h_filter(vector<Mat> &f, vector<Mat> &RS){
 // On calcule les b filters un à un
 void SteerablePyramid::calicurate_b_filter(int i, int j, Mat &fil, const vector<Mat> &AT){
 
-    float _tmp = pow(2.0, j);
+    float _tmp = pow(2.0, i);
 
     for (int x = 0; x < xRes/_tmp; x++){
         for(int y = 0; y < yRes/_tmp; y++){
@@ -149,6 +150,7 @@ void SteerablePyramid::calicurate_b_filter(int i, int j, Mat &fil, const vector<
                 currentCoefficient = alphak * pow(cos(AT[i].at<float>(x, y)
                 - j * M_PI/k), k-1);
             }
+            fil.at<float>(x, y) = currentCoefficient; 
         }
     }
 }
@@ -205,7 +207,7 @@ void SteerablePyramid::createPyramids(){
     dft(h0, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
 
-    Mat lastImage = l0; 
+    // Mat lastImage = l0; 
     
     vector<Mat *> BND;
 
@@ -216,19 +218,27 @@ void SteerablePyramid::createPyramids(){
 
         _tmp = pow(2, i);  
 
+        Mat lastImage(512/_tmp, 512/_tmp, CV_64FC1); 
+
         for (int j = 0; j < yRes; j++){
 
             Mat b_filter(Size(xRes/_tmp, yRes/_tmp), CV_64FC1);
             calicurate_b_filter(i, j, b_filter, AT);
 
-            Mat lb = lastImage.mul(b_filter);
-            Mat f_ishift; // Shift lb
-            Mat img_back; // ishift2 f_ishift
+            Mat lb = b_filter.mul(lastImage); 
+
+            Mat f_ishift(Size(xRes/_tmp, yRes/_tmp), CV_64FC1); // Shift lb
+            Mat img_back(Size(xRes/_tmp, yRes/_tmp), CV_64FC1); // ishift2 f_ishift
+
+            ft_shift(lb, img_back); 
+            idct(lb, f_ishift); 
 
             BND.push_back(&lb);
             BND.push_back(&img_back);
 
         }
+
+        cout << xRes/_tmp << endl;
 
         // Apply low pas filter to image downsampled
         int img_x = lastImage.size[0];
@@ -239,25 +249,30 @@ void SteerablePyramid::createPyramids(){
         Mat down_fil(Size(img_x, img_y), CV_64FC1);
         fillDownfillMatrix(down_fil, quantification_x, quantification_y);
 
-        Mat l(Size(xRes, yRes), CV_64FC1);
+        Mat l(Size(img_x, img_y), CV_64FC1);
         calicurate_l_filter(i, l, RS);
+
+        cout << "OK\n"; 
 
         down_fil = lastImage.mul(l).mul(down_fil);
 
         Mat down_image = Mat_<std::complex<double> >(2 * quantification_x, 2 * quantification_y);
         for (int i = quantification_x; i < 3 * quantification_x; i ++){
             for (int j = quantification_y; j < 3* quantification_y; j++){
-                down_image.at<complex<double> >(i, j) = down_fil.at<complex<double> >(i, j);
+                down_image.at<complex<double> >(i - quantification_x, 
+                    j - quantification_y) = down_fil.at<complex<double> >(i, j);
             }
         }
 
         // Par rapport à la version python, on ne sauvegarde pas low.
         // Ca ne semble pas avoir d'interet.
 
+        lastImage.create(2 * quantification_x, 2 * quantification_y, CV_64FC1); 
+
         lastImage = down_image;
     }
 
-    Mat LRf = lastImage;
+    // Mat LRf = lastImage;
 
 }
 
