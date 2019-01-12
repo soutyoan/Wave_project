@@ -16,6 +16,52 @@ blocks:
         commands:
           - checkout
           - ls -1
+<<<<<<< HEAD
+          - pip install -r requirements.txt
+          #- python3 src/LCP_computation.py
+
+  - name: "Smoke tests"
+    task:
+      jobs:
+      - name: Smoke
+        commands:
+          - checkout
+          - echo "make smoke"
+
+  - name: "Unit tests"
+    task:
+      jobs:
+      - name: RSpec
+        commands:
+          - checkout
+          - echo "make rspec"
+
+      - name: Lint code
+        commands:
+          - checkout
+          - echo "make lint"
+
+      - name: Check security
+        commands:
+          - checkout
+          - echo "make security"
+
+  - name: "Integration tests"
+    task:
+      jobs:
+      - name: Cucumber
+        commands:
+          - checkout
+          - echo "make cucumber"
+
+  - name: "Push Image"
+    task:
+      jobs:
+      - name: Push
+        commands:
+          - checkout
+          - echo "make docker.push"
+=======
           - echo $APP_ENV
           - echo "Docker build..."
           - pwd
@@ -28,3 +74,4 @@ blocks:
           - cmake ..
           - make
           - make test
+>>>>>>> 9c987ce6e7a9458778e3cd458720b05accf0b754

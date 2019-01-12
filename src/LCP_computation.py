@@ -186,6 +186,7 @@ if (__name__ == "__main__"):
 
     # Grayscale mode image reading
     image = cv2.imread(ROOT_PATH+"/images/"+args.input_file, 0)
+
     assert image is not None
     yres, xres = image.shape[:2]
 
