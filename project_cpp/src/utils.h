@@ -40,8 +40,42 @@ Matrix :     1 2
 
 fftshift :   4 3
              2 1
+
+WARNING : TODO : odd sizes
 */
-void ft_shift(){
+void ft_shift(Mat &in, Mat &out){
+    // We need to copy each block
+    int middle_x = (int)(in.rows/2); 
+    int middle_y = (int)(in.cols/2); 
+
+    // Block 1 to 4
+    for (int i = 0; i < middle_x; i++){
+        for (int j = 0; j < middle_y; j++){
+            out.at<float>(i + middle_x, j + middle_y) = in.at<float>(i, j); 
+        }
+    }
+
+    // Block 4 to 1
+    for (int i = 0; i < middle_x; i++){
+        for (int j = 0; j < middle_y; j++){
+            out.at<float>(i, j) = in.at<float>(i + middle_x, j + middle_y); 
+        }
+    }
+
+    // Block 3 to 2
+    for (int i = 0; i < middle_x; i++){
+        for (int j = 0; j < middle_y; j++){
+            out.at<float>(i + middle_x, j) = in.at<float>(i, j + middle_y); 
+        }
+    }
+
+    // Block 2 to 3
+    for (int i = 0; i < middle_x; i++){
+        for (int j = 0; j < middle_y; j++){
+            out.at<float>(i, j + middle_y) = in.at<float>(i + middle_x, j); 
+        }
+    }
+}
 
 
 template <typename T>
@@ -53,14 +87,15 @@ template <typename T>
  * @param  ny size of yy vector
  * @return opencv Matrix with polar coordinates
  */
-cv::Mat* polar_coordinates(const vector<T> &xx, const vector<T> &yy, size_t nx, size_t ny)
-    cv::Mat* res = new Mat(nx, ny, CV_32F);
+Mat* polar_coordinates(const vector<T> &xx, const vector<T> &yy, size_t nx, size_t ny){
+    Mat* res = new Mat(nx, ny, CV_32F);
     for (int i=0; i<nx; i++) {
         for (int j=0; i<ny; j++) {
-            res->at<T>(i,j) = sqrt(xx[i]**2 + yy[j]**2);
+            res->at<T>(i,j) = sqrt(pow(xx[i], 2) + pow(yy[j], 2));
         }
     }
     return res;
+}
 
 template <typename T>
 /**

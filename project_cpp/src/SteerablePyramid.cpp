@@ -35,8 +35,8 @@ void SteerablePyramid::caliculate_polar(vector<Mat*> &RS, vector<Mat *> &AT){
         float _tmp = pow(2.0, i);
         size_t nx = this->image->rows / _tmp;
         size_t ny = this->image->rows / _tmp;
-        vector<float> _wx = linspace<float>(-M_PI, M_PI, grid_x);
-        vector<float> _wy = linspace<float>(-M_PI, M_PI, grid_y);
+        vector<float> _wx = linspace<float>(-M_PI, M_PI, nx);
+        vector<float> _wy = linspace<float>(-M_PI, M_PI, ny);
         Mat* _rs = polar_coordinates(_wx, _wy, nx, ny);
         Mat* _at = angular_coordinates(_wx, _wy, nx, ny);
         RS.push_back(_rs);
@@ -139,7 +139,7 @@ void SteerablePyramid::createPyramids(){
     vector<Mat *> RS; // calculate RS
     vector<Mat *> AT; // calculate AT
 
-    this->caliculate_polar(&RS, &AT);
+    this->caliculate_polar(RS, AT);
 
     // Create all the matrices used during the collapse function
     Mat h0f;
@@ -149,21 +149,20 @@ void SteerablePyramid::createPyramids(){
 
     // Find library for fast fourier transform
     Mat ft; 
-    Mat _ft; 
+    Mat _ft(Size(xRes, yRes), CV_64FC1); 
 
     dft((*image), ft); 
-    idft(ft, _ft); 
-    
-    Mat ft_shift;
-    ft_shift(ft, ft_shift); 
+    ft_shift(ft, _ft); 
 
     ///// THREAD 1 in openmp use thread ID //////
+
+    Mat imgBack; 
 
     // Create HO filter
     Mat h0(Size(xRes, yRes), CV_64FC1);
     calicurate_h0_filter(h0, RS);
 
-    h0 = h0.mul(ft_shift);  // calculation of h0
+    h0 = h0.mul(_ft);  // calculation of h0
     Mat f_ishift;  
     dft(h0, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
@@ -173,8 +172,7 @@ void SteerablePyramid::createPyramids(){
     Mat l0(Size(xRes, yRes), CV_64FC1);
     calicurate_l0_filter(l0, RS);
 
-    l0 = l0.mul(ft_shift);  // calculation of h0
-    Mat f_ishift;  
+    l0 = l0.mul(_ft);  // calculation of h0 
 
     dft(h0, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
