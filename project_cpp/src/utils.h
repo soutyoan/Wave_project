@@ -120,4 +120,19 @@ void angular_coordinates(const vector<T> &wx, const vector<T> &wy,
     }
 }
 
+Mat mul_complex(Mat &m1, Mat &m2){
+    assert (m1.rows == m2.rows); 
+    assert (m1.cols == m2.cols);
+
+    Mat m(m1.rows, m1.cols, CV_64F); 
+
+    for (int i = 0; i < m1.rows; i++){
+        for (int j = 0; j < m1.cols; j++){
+            m.at<complex<float> >(i, j) = m1.at<float>(i, j) * m2.at<complex<float> >(i, j); 
+        }
+    }
+
+    return m; 
+}
+
 #endif
