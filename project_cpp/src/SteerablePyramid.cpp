@@ -16,6 +16,11 @@ SteerablePyramid::SteerablePyramid(Mat _image,
                 string _image_name,
                 string _output_path,
                 bool _verbose){
+
+    if ( _image.empty() ){
+        cerr << "Image is empty" << endl;
+        exit(1); 
+    }
     this->image = _image;
     this->xRes = _xRes;
     this->yRes = _yRes;
@@ -112,9 +117,10 @@ void SteerablePyramid::calicurate_l_filter(int i, Mat &f, vector<Mat> &RS){
 void SteerablePyramid::calicurate_h_filter(vector<Mat> &f, vector<Mat> &RS){
     Mat RS_0 = RS[0];
     for (int i = 0; i < n; i++){
-        Mat m(Size(xRes, yRes), CV_64FC1, 0);
-        for (int x = 0; x < xRes; x++){
-            for(int y = 0; y < yRes; y++){
+        float _tmp = pow(2.0, i);
+        Mat m(Size(xRes/_tmp, yRes/_tmp), CV_64FC1, 0);
+        for (int x = 0; x < xRes/_tmp; x++){
+            for(int y = 0; y < yRes/_tmp; y++){
                 if (RS_0.at<float>(x, y) >= M_PI/2){
                     m.at<float>(x, y) = 1;
                 } else if (RS_0.at<float>(x, y) <= M_PI/4){
@@ -130,8 +136,10 @@ void SteerablePyramid::calicurate_h_filter(vector<Mat> &f, vector<Mat> &RS){
 // On calcule les b filters un à un
 void SteerablePyramid::calicurate_b_filter(int i, int j, Mat &fil, const vector<Mat> &AT){
 
-    for (int x = 0; x < xRes; x++){
-        for(int y = 0; y < yRes; y++){
+    float _tmp = pow(2.0, j);
+
+    for (int x = 0; x < xRes/_tmp; x++){
+        for(int y = 0; y < yRes/_tmp; y++){
             float currentCoefficient = AT[i].at<float>(x, y);
             if (AT[i].at<float>(x, y) - j * M_PI/k < -M_PI){
                 currentCoefficient += 2*M_PI;
@@ -175,10 +183,6 @@ void SteerablePyramid::createPyramids(){
     Mat imgBack(Size(xRes, yRes), CV_64FC1); 
     image.convertTo(image, CV_64FC1);
 
-    cout << "test" << image.type(); 
-
-    cout << "hey" << (image).at<float>(5, 25) << "\n"; 
-
     dft((image), ft); 
     ft_shift(ft, _ft); 
 
@@ -201,17 +205,20 @@ void SteerablePyramid::createPyramids(){
     dft(h0, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
 
-    Mat lastImage = Mat_<std::complex<float> >(l0); 
+    Mat lastImage = l0; 
     
-
     vector<Mat *> BND;
+
+    float _tmp = 1; 
 
     // Parallelize here (use openmp for)
     for (int i = 0; i < n; i ++){
 
+        _tmp = pow(2, i);  
+
         for (int j = 0; j < yRes; j++){
 
-            Mat b_filter(Size(xRes, yRes), CV_64FC1);
+            Mat b_filter(Size(xRes/_tmp, yRes/_tmp), CV_64FC1);
             calicurate_b_filter(i, j, b_filter, AT);
 
             Mat lb = lastImage.mul(b_filter);

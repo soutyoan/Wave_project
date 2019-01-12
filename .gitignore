@@ -2,3 +2,4 @@ output/**/*.jpg
 output/**/*.png
 src/__pycache__/
 *.pyc
+.vscode/
