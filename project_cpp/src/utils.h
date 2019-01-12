@@ -87,15 +87,14 @@ template <typename T>
  * @param  ny size of yy vector
  * @return opencv Matrix with polar coordinates
  */
-Mat* polar_coordinates(const vector<T> &xx, const vector<T> &yy, size_t nx, size_t ny){
-    Mat* res = new Mat(nx, ny, CV_64FC1);
+void polar_coordinates(const vector<T> &xx, const vector<T> &yy, 
+    size_t nx, size_t ny, Mat res){
     for (int i=0; i<nx; i++) {
         for (int j=0; j<ny; j++) {
             // cout << i << " " << j << " " << xx[i] << "\n";
-            res->at<T>(i,j) = sqrt(pow(xx[i], 2) + pow(yy[j], 2));
+            res.at<T>(i,j) = sqrt(pow(xx[i], 2) + pow(yy[j], 2));
         }
     }
-    return res;
 }
 
 template <typename T>
@@ -107,19 +106,18 @@ template <typename T>
  * @param  ny size of wy vector
  * @return    OpenCV Matrix with angular coordinates
  */
-Mat *angular_coordinates(const vector<T> &wx, const vector<T> &wy, size_t nx, size_t ny) {
-    Mat *res = new Mat(nx, ny, CV_64FC1);
+void angular_coordinates(const vector<T> &wx, const vector<T> &wy, 
+    size_t nx, size_t ny, Mat res) {
     for (int i=0; i<nx; i++) {
         for (int j=0; j<ny; j++) {
             if (wy[j]==0.0f && wx[i]<0) {
-                res->at<T>(i,j) = M_PI;
+                res.at<T>(i,j) = M_PI;
             }
             else {
-                res->at<T>(i,j) = atan2(wy[j], wx[i]);
+                res.at<T>(i,j) = atan2(wy[j], wx[i]);
             }
         }
     }
-    return res;
 }
 
 #endif

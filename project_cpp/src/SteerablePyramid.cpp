@@ -39,85 +39,88 @@ SteerablePyramid::SteerablePyramid(Mat _image,
 in order to do a good parallelization we need to be able to calculate these
 matrices one at a time
 */
-void SteerablePyramid::caliculate_one_polar(Mat* RS, Mat* AT, int i){
+void SteerablePyramid::caliculate_one_polar(Mat RS, Mat AT, int i){
     float _tmp = pow(2.0, i);
     size_t nx = this->image.rows / _tmp;
     size_t ny = this->image.cols / _tmp;
     vector<float> _wx = linspace<float>(-M_PI, M_PI, nx);
     vector<float> _wy = linspace<float>(-M_PI, M_PI, ny);
     cout << _wx.size() << " " << _wy.size() << " " << nx << " " << ny << "\n"; 
-    RS = polar_coordinates<float>(_wx, _wy, nx, ny);
-    AT = angular_coordinates<float>(_wx, _wy, nx, ny);
+    polar_coordinates<float>(_wx, _wy, nx, ny, RS);
+    angular_coordinates<float>(_wx, _wy, nx, ny, AT);
 }
 
-void SteerablePyramid::caliculate_polar(vector<Mat*> &RS, vector<Mat *> &AT){
+void SteerablePyramid::caliculate_polar(vector<Mat> &RS, vector<Mat> &AT){
 
     for (int i=0; i < this->n; i++) {
         // Computation polar coordinates (radius) on the grid
-        Mat* _rs; 
-        Mat* _at; 
+        float _tmp = pow(2.0, i);
+        Mat _rs(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64FC1); 
+        Mat _at(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64FC1); 
         caliculate_one_polar(_rs, _at, i); 
+        cout << "RS " << _rs.rows << " " << _rs.cols << "\n"; 
         RS.push_back(_rs);
         AT.push_back(_at);
     }
 }
 
-void SteerablePyramid::calicurate_h0_filter(Mat &fil, vector<Mat*> &RS){
-    Mat* RS_0 = RS[0];
-    // Mat* fil = new Mat(Size(xRes, yRes), CV_64FC1);
+void SteerablePyramid::calicurate_h0_filter(Mat &fil, vector<Mat> &RS){
+    Mat RS_0 = RS[0];
+    cout << "size" << RS_0.rows << "\n";  
+    // Mat fil = new Mat(Size(xRes, yRes), CV_64FC1);
     // Possible parallelisation?
     for (int i = 0; i < xRes; i++){
         for (int j = 0; j < yRes; j++){
-            if (RS_0->at<float>(i, j) >= M_PI){
+            if (RS_0.at<float>(i, j) >= M_PI){
                 fil.at<float>(i, j) = 1;
-            } else if (RS_0->at<float>(i, j) >= M_PI/2) {
-                fil.at<float>(i, j) = cos(M_PI/2 * log2(RS_0->at<float>(i, j)/M_PI));
+            } else if (RS_0.at<float>(i, j) >= M_PI/2) {
+                fil.at<float>(i, j) = cos(M_PI/2 * log2(RS_0.at<float>(i, j)/M_PI));
             }
         }
     }
 }
 
-void SteerablePyramid::calicurate_l0_filter(Mat &fil, vector<Mat*> &RS){
-    Mat* RS_0 = RS[0];
+void SteerablePyramid::calicurate_l0_filter(Mat &fil, vector<Mat> &RS){
+    Mat RS_0 = RS[0];
     // Possible parallelisation?
     for (int i = 0; i < xRes; i++){
         for (int j = 0; j < yRes; j++){
-            if (RS_0->at<float>(i, j) >= 0){
+            if (RS_0.at<float>(i, j) >= 0){
                 fil.at<float>(i, j) = 1;
-            } else if (RS_0->at<float>(i, j) >= M_PI/2) {
-                fil.at<float>(i, j) = cos(M_PI/2 * log2(RS_0->at<float>(i, j)/M_PI));
+            } else if (RS_0.at<float>(i, j) >= M_PI/2) {
+                fil.at<float>(i, j) = cos(M_PI/2 * log2(RS_0.at<float>(i, j)/M_PI));
             }
         }
     }
 }
 
-void SteerablePyramid::calicurate_l_filter(int i, Mat &f, vector<Mat*> &RS){
-    Mat* RS_0 = RS[0];
+void SteerablePyramid::calicurate_l_filter(int i, Mat &f, vector<Mat> &RS){
+    Mat RS_0 = RS[0];
     for (int x = 0; x < xRes; x++){
         for(int y = 0; y < yRes; y++){
-            if (RS_0->at<float>(x, y) >= M_PI/2){
+            if (RS_0.at<float>(x, y) >= M_PI/2){
                 f.at<float>(x, y) = 0;
-            } else if (RS_0->at<float>(x, y) <= M_PI/4){
+            } else if (RS_0.at<float>(x, y) <= M_PI/4){
                 f.at<float>(x, y) = 1;
             } else {
-                f.at<float>(x, y) = cos(M_PI/2 * log2(4 * RS_0->at<float>(x, y)/M_PI));
+                f.at<float>(x, y) = cos(M_PI/2 * log2(4 * RS_0.at<float>(x, y)/M_PI));
             }
         }
     }
 }
 
-void SteerablePyramid::calicurate_h_filter(vector<Mat *> &f, vector<Mat*> &RS){
-    Mat* RS_0 = RS[0];
+void SteerablePyramid::calicurate_h_filter(vector<Mat> &f, vector<Mat> &RS){
+    Mat RS_0 = RS[0];
     for (int i = 0; i < n; i++){
-        Mat* m = new Mat(Size(xRes, yRes), CV_64FC1, 0);
+        Mat m(Size(xRes, yRes), CV_64FC1, 0);
         for (int x = 0; x < xRes; x++){
             for(int y = 0; y < yRes; y++){
-                if (RS_0->at<float>(x, y) >= M_PI/2){
-                    m->at<float>(x, y) = 1;
-                } else if (RS_0->at<float>(x, y) <= M_PI/4){
-                    m->at<float>(x, y) = 0;
+                if (RS_0.at<float>(x, y) >= M_PI/2){
+                    m.at<float>(x, y) = 1;
+                } else if (RS_0.at<float>(x, y) <= M_PI/4){
+                    m.at<float>(x, y) = 0;
                 } else {
-                    m->at<float>(x, y) = cos(M_PI/2 * log2(2 * RS_0->at<float>(x, y)/M_PI));
+                    m.at<float>(x, y) = cos(M_PI/2 * log2(2 * RS_0.at<float>(x, y)/M_PI));
                 }
             }
         }
@@ -125,17 +128,17 @@ void SteerablePyramid::calicurate_h_filter(vector<Mat *> &f, vector<Mat*> &RS){
 }
 
 // On calcule les b filters un à un
-void SteerablePyramid::calicurate_b_filter(int i, int j, Mat &fil, const vector<Mat *> &AT){
+void SteerablePyramid::calicurate_b_filter(int i, int j, Mat &fil, const vector<Mat> &AT){
 
     for (int x = 0; x < xRes; x++){
         for(int y = 0; y < yRes; y++){
-            float currentCoefficient = AT[i]->at<float>(x, y);
-            if (AT[i]->at<float>(x, y) - j * M_PI/k < -M_PI){
+            float currentCoefficient = AT[i].at<float>(x, y);
+            if (AT[i].at<float>(x, y) - j * M_PI/k < -M_PI){
                 currentCoefficient += 2*M_PI;
-            } else if (AT[i]->at<float>(x, y) - j * M_PI/k > M_PI){
+            } else if (AT[i].at<float>(x, y) - j * M_PI/k > M_PI){
                 currentCoefficient -= 2*M_PI;
-            } else if (abs(AT[i]->at<float>(x, y) - j*M_PI/k)< M_PI/2){
-                currentCoefficient = alphak * pow(cos(AT[i]->at<float>(x, y)
+            } else if (abs(AT[i].at<float>(x, y) - j*M_PI/k)< M_PI/2){
+                currentCoefficient = alphak * pow(cos(AT[i].at<float>(x, y)
                 - j * M_PI/k), k-1);
             }
         }
@@ -152,8 +155,8 @@ void fillDownfillMatrix(Mat &down, int x, int y){
 
 void SteerablePyramid::createPyramids(){
 
-    vector<Mat *> RS; // calculate RS
-    vector<Mat *> AT; // calculate AT
+    vector<Mat> RS; // calculate RS
+    vector<Mat> AT; // calculate AT
 
     this->caliculate_polar(RS, AT);
 
@@ -170,8 +173,11 @@ void SteerablePyramid::createPyramids(){
     ///// THREAD 1 in openmp use thread ID //////
 
     Mat imgBack(Size(xRes, yRes), CV_64FC1); 
+    image.convertTo(image, CV_64FC1);
 
-    cout << (image).at<float>(5, 25) << "\n"; 
+    cout << "test" << image.type(); 
+
+    cout << "hey" << (image).at<float>(5, 25) << "\n"; 
 
     dft((image), ft); 
     ft_shift(ft, _ft); 
