@@ -32,7 +32,6 @@ std::vector<T> linspace(T a, T b, size_t N) {
     return xs;
 }
 
-<<<<<<< HEAD
 /*
 Our own implementation of the ft Shift
 Inversing blocks in the Matrix
@@ -40,11 +39,10 @@ Matrix :     1 2
              3 4
 
 fftshift :   4 3
-          2 1
+             2 1
 */
 void ft_shift(){
 
-=======
 
 template <typename T>
 /**
@@ -86,7 +84,6 @@ cv::Mat *angular_coordinates(const vector<T> &wx, const vector<T> &wy, size_t nx
         }
     }
     return res;
->>>>>>> 8f4b5190d0036b7129086ac1f5321c908efdb2f9
 }
 
 #endif
