@@ -139,11 +139,7 @@ void SteerablePyramid::createPyramids(){
     vector<Mat *> RS; // calculate RS
     vector<Mat *> AT; // calculate AT
 
-<<<<<<< .merge_file_gktlf6
-    Mat imgBack; 
-=======
     this->caliculate_polar(&RS, &AT);
->>>>>>> .merge_file_PQ7Ee7
 
     // Create all the matrices used during the collapse function
     Mat h0f;
@@ -152,16 +148,13 @@ void SteerablePyramid::createPyramids(){
     Mat l0s;
 
     // Find library for fast fourier transform
-<<<<<<< .merge_file_gktlf6
     Mat ft; 
     Mat _ft; 
 
     dft((*image), ft); 
     idft(ft, _ft); 
-=======
-    Mat ft;
+    
     Mat ft_shift;
->>>>>>> .merge_file_PQ7Ee7
 
     ///// THREAD 1 in openmp use thread ID //////
 
@@ -179,7 +172,6 @@ void SteerablePyramid::createPyramids(){
     Mat l0(Size(xRes, yRes), CV_64FC1);
     calicurate_l0_filter(l0, RS);
 
-<<<<<<< .merge_file_gktlf6
     l0 = l0.mul(ft_shift);  // calculation of h0
     Mat f_ishift;  
 
@@ -187,9 +179,7 @@ void SteerablePyramid::createPyramids(){
     idft(f_ishift, imgBack); // IFFT opencv
 
     Mat lastImage = Mat_<std::complex<float> >(l0); 
-=======
-    Mat lastImage = Mat_<std::complex<float> >(l0);
->>>>>>> .merge_file_PQ7Ee7
+    
 
     vector<Mat *> BND;
 
