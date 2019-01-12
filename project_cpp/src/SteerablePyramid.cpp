@@ -30,16 +30,20 @@ SteerablePyramid::SteerablePyramid(Mat *_image,
 
 void SteerablePyramid::caliculate_polar(vector<Mat*> &RS, vector<Mat *> &AT){
 
-    for (int i=0; i<this->n; i++) {
+    for (int i=0; i < this->n; i++) {
         // Computation polar coordinates (radius) on the grid
         float _tmp = pow(2.0, i);
-        size_t grid_x = this->image->rows / _tmp;
-        size_t grid_y = this->image->rows / _tmp;
+        size_t nx = this->image->rows / _tmp;
+        size_t ny = this->image->rows / _tmp;
         vector<float> _wx = linspace<float>(-M_PI, M_PI, grid_x);
         vector<float> _wy = linspace<float>(-M_PI, M_PI, grid_y);
-        Mat *_rs = new Mat(grid_x, grid_y, CV_32F);
+        Mat* _rs = polar_coordinates(_wx, _wy, nx, ny);
+        Mat* _at = angular_coordinates(_wx, _wy, nx, ny);
+        RS.push_back(_rs);
+        AT.push_back(_at);
+        delete _rs;
+        delete _at;
     }
-
 }
 
 void SteerablePyramid::calicurate_h0_filter(Mat &fil, vector<Mat*> &RS){
@@ -125,7 +129,7 @@ void SteerablePyramid::calicurate_b_filter(int i, int j, Mat &fil, const vector<
 void fillDownfillMatrix(Mat &down, int x, int y){
     for (int i = x; i < 3 * x; i++){
         for (int j = y; j < 3 * y; j++){
-            down.at<float>(i, j) = 1; 
+            down.at<float>(i, j) = 1;
         }
     }
 }
@@ -135,37 +139,47 @@ void SteerablePyramid::createPyramids(){
     vector<Mat *> RS; // calculate RS
     vector<Mat *> AT; // calculate AT
 
+<<<<<<< .merge_file_gktlf6
     Mat imgBack; 
+=======
+    this->caliculate_polar(&RS, &AT);
+>>>>>>> .merge_file_PQ7Ee7
 
     // Create all the matrices used during the collapse function
-    Mat h0f; 
+    Mat h0f;
     Mat h0s;
-    Mat l0f; 
-    Mat l0s; 
+    Mat l0f;
+    Mat l0s;
 
     // Find library for fast fourier transform
+<<<<<<< .merge_file_gktlf6
     Mat ft; 
     Mat _ft; 
 
     dft((*image), ft); 
     idft(ft, _ft); 
+=======
+    Mat ft;
+    Mat ft_shift;
+>>>>>>> .merge_file_PQ7Ee7
 
     ///// THREAD 1 in openmp use thread ID //////
 
     // Create HO filter
-    Mat h0(Size(xRes, yRes), CV_64FC1); 
-    calicurate_h0_filter(h0, RS); 
+    Mat h0(Size(xRes, yRes), CV_64FC1);
+    calicurate_h0_filter(h0, RS);
 
     h0 = h0.mul(ft_shift);  // calculation of h0
     Mat f_ishift;  
     dft(h0, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
 
-    //// THREAD 2 in openmp use thread ID ///// 
+    //// THREAD 2 in openmp use thread ID /////
 
-    Mat l0(Size(xRes, yRes), CV_64FC1); 
+    Mat l0(Size(xRes, yRes), CV_64FC1);
     calicurate_l0_filter(l0, RS);
 
+<<<<<<< .merge_file_gktlf6
     l0 = l0.mul(ft_shift);  // calculation of h0
     Mat f_ishift;  
 
@@ -173,55 +187,58 @@ void SteerablePyramid::createPyramids(){
     idft(f_ishift, imgBack); // IFFT opencv
 
     Mat lastImage = Mat_<std::complex<float> >(l0); 
+=======
+    Mat lastImage = Mat_<std::complex<float> >(l0);
+>>>>>>> .merge_file_PQ7Ee7
 
-    vector<Mat *> BND; 
+    vector<Mat *> BND;
 
     // Parallelize here (use openmp for)
     for (int i = 0; i < n; i ++){
 
         for (int j = 0; j < yRes; j++){
 
-            Mat b_filter(Size(xRes, yRes), CV_64FC1); 
-            calicurate_b_filter(i, j, b_filter, AT); 
+            Mat b_filter(Size(xRes, yRes), CV_64FC1);
+            calicurate_b_filter(i, j, b_filter, AT);
 
-            Mat lb = lastImage.mul(b_filter); 
+            Mat lb = lastImage.mul(b_filter);
             Mat f_ishift; // Shift lb
             Mat img_back; // ishift2 f_ishift
 
             BND.push_back(&lb);
-            BND.push_back(&img_back);  
+            BND.push_back(&img_back);
 
         }
 
         // Apply low pas filter to image downsampled
         int img_x = lastImage.size[0];
-        int img_y = lastImage.size[1]; 
+        int img_y = lastImage.size[1];
         int quantification_x = (int)(img_x/4);
-        int quantification_y = (int)(img_y/4);  
+        int quantification_y = (int)(img_y/4);
 
-        Mat down_fil(Size(img_x, img_y), CV_64FC1); 
-        fillDownfillMatrix(down_fil, quantification_x, quantification_y); 
+        Mat down_fil(Size(img_x, img_y), CV_64FC1);
+        fillDownfillMatrix(down_fil, quantification_x, quantification_y);
 
-        Mat l(Size(xRes, yRes), CV_64FC1); 
-        calicurate_l_filter(i, l, RS); 
+        Mat l(Size(xRes, yRes), CV_64FC1);
+        calicurate_l_filter(i, l, RS);
 
-        down_fil = lastImage.mul(l).mul(down_fil);         
+        down_fil = lastImage.mul(l).mul(down_fil);
 
-        Mat down_image = Mat_<std::complex<double> >(2 * quantification_x, 2 * quantification_y);         
+        Mat down_image = Mat_<std::complex<double> >(2 * quantification_x, 2 * quantification_y);
         for (int i = quantification_x; i < 3 * quantification_x; i ++){
             for (int j = quantification_y; j < 3* quantification_y; j++){
-                down_image.at<complex<double> >(i, j) = down_fil.at<complex<double> >(i, j); 
+                down_image.at<complex<double> >(i, j) = down_fil.at<complex<double> >(i, j);
             }
         }
 
         // Par rapport à la version python, on ne sauvegarde pas low.
-        // Ca ne semble pas avoir d'interet. 
+        // Ca ne semble pas avoir d'interet.
 
-        lastImage = down_image; 
+        lastImage = down_image;
     }
 
-    Mat LRf = lastImage; 
-    
+    Mat LRf = lastImage;
+
 }
 
 void collapsePyramids(Mat &f){

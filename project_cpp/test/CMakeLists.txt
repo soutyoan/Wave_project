@@ -9,7 +9,7 @@ add_executable(test_compilation test_compilation.cpp)
 
 # LINK LIBRARIES
 
-target_link_libraries(test_compilation SteerablePyramid -lopencv_imgproc ${OpenCV_LIBS})
+target_link_libraries(test_compilation SteerablePyramid ${OpenLibraries})
 
 # Transform into tests
 

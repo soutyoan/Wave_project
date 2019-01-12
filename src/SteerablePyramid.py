@@ -50,11 +50,13 @@ import math
 import sys, os
 import logging
 
+from mpi4py import MPI
+
 SCRIPT_NAME = os.path.basename(__file__)
 # logging
-LOG_FMT = "[%(name)s] %(asctime)s %(levelname)s %(lineno)s %(message)s"
-logging.basicConfig(level=logging.DEBUG, format=LOG_FMT)
-LOGGER = logging.getLogger(os.path.basename(__file__))
+# LOG_FMT = "[%(name)s] %(asctime)s %(levelname)s %(lineno)s %(message)s"
+# logging.basicConfig(level=logging.DEBUG, format=LOG_FMT)
+# LOGGER = logging.getLogger(os.path.basename(__file__))
 
 '''
 
@@ -267,70 +269,74 @@ class SteerablePyramid():
 
 			_f.append(fil)
 
-			# if i == 0 and self.verbose == 1:
-			#
-			# 	plt.clf()
-			# 	plt.contourf(self.WX[i], self.WY[i], fil)
-			# 	plt.axes().set_aspect('equal', 'datalim')
-			# 	plt.colorbar()
-			# 	plt.xlabel('x')
-			# 	plt.ylabel('y')
-			# 	plt.title('Highpass filter of Layer{} : Fourier Domain'.format(str(i)))
-			# 	plt.savefig(self.OUT_PATH.format('fil_highpass-layer{}.png'.format(str(i))))
-
 		return _f
 
 	def calicurate_b_filters(self):
+
+		print("Calculating b filters")
+
 		f_ = []
+
+		comm = MPI.COMM_WORLD
+		rank = comm.Get_rank()
+		size = comm.Get_size()
+
 		for i in range(0, self.N):
-			fils_ = []
+
+			if rank == 0:
+				fils_ = [0] * self.K
 
 			for k in range(self.K):
-				# caliculate Bk values on the grid.
-				fil_= np.zeros_like(self.GRID[i], dtype=complex)
-				th1= self.AT[i].copy()
-				th2= self.AT[i].copy()
 
-				th1[np.where(self.AT[i] - k*np.pi/self.K < -np.pi)] += 2.*np.pi
-				th1[np.where(self.AT[i] - k*np.pi/self.K > np.pi)] -= 2.*np.pi
-				ind_ = np.where(np.absolute(th1 - k*np.pi/self.K) <= np.pi/2.)
-				fil_[ind_] = self.ALPHAK * (np.cos(th1[ind_] - k*np.pi/self.K))**(self.K-1)
-#				fil_[ind_] = complex(0,1)**k * self.ALPHAK * (np.cos(th1[ind_] - k*np.pi/self.K))**(self.K-1)
-				th2[np.where(self.AT[i] + (self.K-k)*np.pi/self.K < -np.pi)] += 2.*np.pi
-				th2[np.where(self.AT[i] + (self.K-k)*np.pi/self.K > np.pi)] -= 2.*np.pi
-				ind_ = np.where(np.absolute(th2 + (self.K-k) * np.pi/self.K) <= np.pi/2.)
-				fil_[ind_] = self.ALPHAK * (np.cos(th2[ind_]+ (self.K-k) * np.pi/self.K))**(self.K-1)
-#				fil_[ind_] = complex(0,1)**k * self.ALPHAK * (np.cos(th2[ind_]+ (self.K-k) * np.pi/self.K))**(self.K-1)
+				if k % size == rank:
 
-				fil_= self.H_FILT[i] * fil_
-				fils_.append(fil_.copy())
+					print(i, k, rank)
 
-				# if i == 0 and self.verbose == 1:
-				#
-				# 	plt.clf()
-				# 	plt.contourf(self.WX[i], self.WY[i], np.abs(fil_))
-				# 	plt.axes().set_aspect('equal', 'datalim')
-				# 	plt.colorbar()
-				# 	plt.xlabel('x')
-				# 	plt.ylabel('y')
-				# 	plt.title('Bandpass filter of layer{} : Fourier Domain'.format(str(i)))
-				# 	plt.savefig(self.OUT_PATH.format('fil_bandpass{}-layer{}.png'.format(str(k), str(i))))
-				#
-				# 	plt.clf()
-				# 	plt.contourf(self.WX[i], self.WY[i], np.abs(fil_ * self.L0_FILT))
-				# 	plt.axes().set_aspect('equal', 'datalim')
-				# 	plt.colorbar()
-				# 	plt.xlabel('x')
-				# 	plt.ylabel('y')
-				# 	plt.title('Bandpass * Lowpass filter of layer{}'.format(str(i)))
-				# 	plt.savefig(self.OUT_PATH.format('fil_lo-bandpass{}-layer{}.png'.format(str(k), str(i))))
+					# caliculate Bk values on the grid.
+					fil_= np.zeros_like(self.GRID[i], dtype=complex)
+					th1= self.AT[i].copy()
+					th2= self.AT[i].copy()
 
-			f_.append(fils_)
+					th1[np.where(self.AT[i] - k*np.pi/self.K < -np.pi)] += 2.*np.pi
+					th1[np.where(self.AT[i] - k*np.pi/self.K > np.pi)] -= 2.*np.pi
+					ind_ = np.where(np.absolute(th1 - k*np.pi/self.K) <= np.pi/2.)
+					fil_[ind_] = self.ALPHAK * (np.cos(th1[ind_] - k*np.pi/self.K))**(self.K-1)
+	#				fil_[ind_] = complex(0,1)**k * self.ALPHAK * (np.cos(th1[ind_] - k*np.pi/self.K))**(self.K-1)
+					th2[np.where(self.AT[i] + (self.K-k)*np.pi/self.K < -np.pi)] += 2.*np.pi
+					th2[np.where(self.AT[i] + (self.K-k)*np.pi/self.K > np.pi)] -= 2.*np.pi
+					ind_ = np.where(np.absolute(th2 + (self.K-k) * np.pi/self.K) <= np.pi/2.)
+					fil_[ind_] = self.ALPHAK * (np.cos(th2[ind_]+ (self.K-k) * np.pi/self.K))**(self.K-1)
+	#				fil_[ind_] = complex(0,1)**k * self.ALPHAK * (np.cos(th2[ind_]+ (self.K-k) * np.pi/self.K))**(self.K-1)
+
+					fil_= self.H_FILT[i] * fil_
+
+					if rank != 0:
+						# After the MPI computation we need to send back to the first thread the result
+						comm.send(fil_, dest=0, tag=k)
+					else:
+						fils_[k] = fil_
+
+				if rank == 0 and k%size != rank:
+					data = comm.recv(source=k%size, tag=k)
+					fils_[k] = data
+
+			comm.Barrier()
+
+			if rank == 0:
+				f_.append(fils_)
+
+		print("calculating b filters done")
+
+		while rank != 0:
+			pass
 
 		return f_
 
 	# create steerable pyramid
 	def create_pyramids(self):
+
+		####### We want to put this two calculations, low filter
+		# and high filter on two different threads ######
 
 		# DFT
 		ft = np.fft.fft2(self.IMAGE_ARRAY)
@@ -360,14 +366,65 @@ class SteerablePyramid():
 			_tmp = np.absolute(img_back)
 			Image.fromarray(np.uint8(_tmp), mode='L').save(self.OUT_PATH.format('{}-l0.png'.format(self.IMAGE_NAME)))
 
+		comm = MPI.COMM_WORLD
+		rank = comm.Get_rank()
+		size = comm.Get_size()
+
 		# apply bandpass filter(B) and downsample iteratively. save pyramid
 		_last = l0
 		for i in range(self.N):
-			_t = []
+
+			if rank == 0:
+				_t = [0] * len(self.B_FILT[i])
+
 			for j in range(len(self.B_FILT[i])):
-				_tmp = {'f':None, 's':None}
-				lb = _last * self.B_FILT[i][j]
-				f_ishift = np.fft.ifftshift(lb)
+
+				if j % size == rank:
+					_tmp = {'f':None, 's':None}
+					lb = _last * self.B_FILT[i][j]
+					f_ishift = np.fft.ifftshift(lb)
+					img_back = np.fft.ifft2(f_ishift)
+					# frequency
+					_tmp['f'] = lb
+					# space
+					_tmp['s'] = img_back
+
+				if rank != 0:
+					# After the MPI computation we need to send back to the first thread the result
+					comm.send(_tmp, dest=0, tag=j)
+				else:
+					_t[j] = _tmp
+
+				if rank == 0 and j%size != rank:
+					data = comm.recv(source=j%size, tag=j)
+					_t[j] = data
+
+			commm.Barrier() # Wait for all threads
+
+			if rank == 0:
+
+				self.BND.append(_t.copy())
+
+				# apply lowpass filter(L) to image(Fourier Domain) downsampled.
+				l1 = _last * self.L_FILT[i]
+
+				## Downsampling
+				# filter for cutting off high frequerncy(>np.pi/2).
+				# (Attn) steerable pyramid is basically anti-aliases. see http://www.cns.nyu.edu/pub/eero/simoncelli95b.pdf
+				# this filter is not needed actually ,but prove anti-aliases characteristic of the steerable filters.
+				down_fil = np.zeros(_last.shape)
+				quant4x = int(down_fil.shape[1]/4)
+				quant4y = int(down_fil.shape[0]/4)
+				down_fil[quant4y:3*quant4y, quant4x:3*quant4x] = 1
+
+				# apply downsample filter.
+				dl1 = l1 * down_fil
+
+				# extract the central part of DFT
+				down_image = np.zeros((2*quant4y, 2*quant4x), dtype=complex)
+				down_image = dl1[quant4y:3*quant4y, quant4x:3*quant4x]
+	#
+				f_ishift = np.fft.ifftshift(down_image)
 				img_back = np.fft.ifft2(f_ishift)
 				# frequency
 				_tmp['f'] = lb
@@ -399,7 +456,7 @@ class SteerablePyramid():
 			# extract the central part of DFT
 			down_image = np.zeros((2*quant4y, 2*quant4x), dtype=complex)
 			down_image = dl1[quant4y:3*quant4y, quant4x:3*quant4x]
-#
+
 			f_ishift = np.fft.ifftshift(down_image)
 			img_back = np.fft.ifft2(f_ishift)
 			self.LOW.append({'f':down_image, 's':img_back})
