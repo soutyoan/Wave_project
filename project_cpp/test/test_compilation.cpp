@@ -13,6 +13,6 @@ int main(){
         ".", 
         false);
 
-    s.createPyramids(); 
+    s.collapsePyramids(); 
     
 }

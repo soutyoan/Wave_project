@@ -61,10 +61,10 @@ public:
     void calicurate_b_filter(int i, int j, Mat &fil, const vector<Mat> &AT);
 
     // create steerable pyramid
-    void createPyramids();
+    Mat createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Mat> &BND);
 
     // image reconstruction from steerable pyramid in Fourier domain.
-    void collapsePyramids(Mat &f);
+    void collapsePyramids();
 
     // clear the steerable pyramid
     void clearPyramids(Mat &f);

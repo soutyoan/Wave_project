@@ -163,12 +163,7 @@ void fillDownfillMatrix(Mat &down, int x, int y){
     }
 }
 
-void SteerablePyramid::createPyramids(){
-
-    vector<Mat> RS; // calculate RS
-    vector<Mat> AT; // calculate AT
-
-    this->caliculate_polar(RS, AT);
+Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Mat> &BND){
 
     // Create all the matrices used during the collapse function
     Mat h0f(Size(xRes, yRes), CV_64F);
@@ -208,8 +203,6 @@ void SteerablePyramid::createPyramids(){
     idft(f_ishift, imgBack); // IFFT opencv
 
     // Mat lastImage = l0; 
-    
-    vector<Mat *> BND;
 
     float _tmp = 1; 
 
@@ -235,8 +228,8 @@ void SteerablePyramid::createPyramids(){
             ft_shift(lb, img_back); 
             idct(lb, f_ishift); 
 
-            BND.push_back(&lb);
-            BND.push_back(&img_back);
+            BND.push_back(lb);
+            BND.push_back(img_back);
 
         }
 
@@ -278,9 +271,50 @@ void SteerablePyramid::createPyramids(){
 
     Mat LRf = lastImage;
 
+    return LRf; 
+
 }
 
-void collapsePyramids(Mat &f){
+void SteerablePyramid::collapsePyramids(){
+
+    vector<Mat> RS; // calculate RS
+    vector<Mat> AT; // calculate AT
+    vector<Mat> BND; // calculate AT
+
+    this->caliculate_polar(RS, AT);
+
+    //Vecteur retour de la valeur de BND
+    Mat resid = createPyramids(RS, AT, BND); 
+
+    for (int i = n-1; i > -1; i--){
+
+        Mat tmp(Size(2*resid.rows, 2 * resid.rows), CV_64F); 
+
+        int quant4x = (int)(resid.rows/2); 
+        int quant4y = (int)(resid.cols/2); 
+
+        // Recopy the matrix
+        for (int i = quant4x; i < 3 * quant4x; i++){
+            for (int j = quant4y; j < 3 * quant4y; j++){
+                tmp.at<complex<float> >(i, j) = 
+                    resid.at<complex<float> >(i - quant4x, j - quant4y); 
+            }
+        }
+
+        Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F); 
+        calicurate_l_filter(i, filt, AT); 
+
+        tmp = mul_complex(filt, tmp); 
+
+        for (int j = 0; j < k; j++){
+            Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F); 
+            calicurate_b_filter(i, j, filt, AT); 
+            tmp = tmp + BND[i * k + j].mul(filt); 
+        }
+
+
+    }
+
 
 }
 
