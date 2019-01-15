@@ -11,9 +11,11 @@ int main(){
         2,
         "lena",
         ".",
-        false);
+        false,
+        2,
+        0.1);
 
     Mat p = s.collapsePyramids();
-    imwrite("../output/output.png", p); 
+    imwrite("../output/output.png", p);
 
 }

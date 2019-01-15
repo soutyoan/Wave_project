@@ -30,6 +30,13 @@ public:
     // Can set the program as verbose
     bool verbose;
 
+    // LPC attributes
+    // constant to stabilize computations
+    float C;
+
+    // value for sharpness computation
+    float beta;
+
     SteerablePyramid(Mat image,
                     int xRes,
                     int yRes,
@@ -37,7 +44,9 @@ public:
                     int k,
                     string image_name,
                     string output_path,
-                    bool verbose);
+                    bool verbose,
+                    float C,
+                    float beta);
 
     ~SteerablePyramid();
 
@@ -69,9 +78,27 @@ public:
     // clear the steerable pyramid
     void clearPyramids(Mat &f);
 
+    // LCP computation methods
+
+    // weights computation
+    void get_w(vector<float>& w);
+
+    //compute of LPC strength
+    float LPCStrength(const vector<float>& w, int j, int k);
+
+    // computation of spatial LPC
+    float SpatialLPC(int k);
+
+    // computation of LPC map
+    void LPCMap(Mat& map);
+
+    // computation of the sharpness index
+    float LPCSharpnessIndex();
+
 private:
     float alphak;
-
+    float d; // LCP computation : step value for s vector computation
+    float s1; // LCP computation : choice of strength for the finest scale
 
 };
 

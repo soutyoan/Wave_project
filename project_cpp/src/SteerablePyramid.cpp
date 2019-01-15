@@ -15,7 +15,9 @@ SteerablePyramid::SteerablePyramid(Mat _image,
                 int _k,
                 string _image_name,
                 string _output_path,
-                bool _verbose){
+                bool _verbose,
+                float C,
+                float beta){
 
     if ( _image.empty() ){
         cerr << "Image is empty" << endl;
@@ -29,6 +31,8 @@ SteerablePyramid::SteerablePyramid(Mat _image,
     this->image_name = _image_name;
     this->output_path = _output_path;
     this->verbose = _verbose;
+    this->C = C;
+    this->beta = beta;
 
     this->alphak = 	pow(2, (k-1)) * factorial(k-1)/sqrt(k * factorial(2*(k-1)));
 
@@ -337,6 +341,55 @@ Mat SteerablePyramid::collapsePyramids(){
 
     return recon;
 
+}
+
+/**
+ * Computation of w weights for LPC strength computation
+ * @param w resulting vector of float w
+ */
+void SteerablePyramid::get_w(vector<float>& w)
+{
+    // TODO
+}
+
+/**
+ * Computation of Local Phase Coherence strength
+ * @param  w vector of weights
+ * @param  j chosen orientation
+ * @param  k spatial location
+ * @return   S_{LPC}^{j,k}
+ */
+float SteerablePyramid::LPCStrength(vector<float> w, int j, int k)
+{
+    // TODO
+}
+
+/**
+ * Computation of Local Phase Coherence coefficient
+ * @param  k spatial location
+ * @return   S_{LPC}^{k}
+ */
+float SteerablePyramid::SpatialLPC(int k)
+{
+    // TODO
+}
+
+/**
+ * Computation of LPC map
+ * @param map output LPC maps
+ */
+void SteerablePyramid::LPCMap(Mat& map)
+{
+    // TODO
+}
+
+/**
+ * Computation of the sharpness index
+ * @return LPC-based sharpness index
+ */
+float SteerablePyramid::LPCSharpnessIndex()
+{
+    // TODO
 }
 
 void SteerablePyramid::clearPyramids(Mat &f){
