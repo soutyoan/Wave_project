@@ -41,7 +41,7 @@ public:
 
     ~SteerablePyramid();
 
-    void caliculate_one_polar(Mat RS, Mat AT, int i); 
+    void caliculate_one_polar(Mat RS, Mat AT, int i);
 
     void caliculate_polar(vector<Mat > &RS, vector<Mat > &AT);
 
@@ -64,7 +64,7 @@ public:
     Mat createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Mat> &BND);
 
     // image reconstruction from steerable pyramid in Fourier domain.
-    void collapsePyramids();
+    Mat collapsePyramids();
 
     // clear the steerable pyramid
     void clearPyramids(Mat &f);

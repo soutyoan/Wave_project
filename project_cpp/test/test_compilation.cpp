@@ -2,17 +2,18 @@
 
 int main(){
 
-    Mat m = imread("../../images/lena.jpg", 0); 
+    Mat m = imread("../../images/lena.jpg", 0);
 
-    SteerablePyramid s(m, 
-        m.rows, 
-        m.cols, 
-        3, 
-        2, 
-        "lena", 
-        ".", 
+    SteerablePyramid s(m,
+        m.rows,
+        m.cols,
+        3,
+        2,
+        "lena",
+        ".",
         false);
 
-    s.collapsePyramids(); 
-    
+    Mat p = s.collapsePyramids();
+    imwrite("../output/output.png", p); 
+
 }

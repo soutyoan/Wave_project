@@ -19,7 +19,7 @@ SteerablePyramid::SteerablePyramid(Mat _image,
 
     if ( _image.empty() ){
         cerr << "Image is empty" << endl;
-        exit(1); 
+        exit(1);
     }
     this->image = _image;
     this->xRes = _xRes;
@@ -32,12 +32,12 @@ SteerablePyramid::SteerablePyramid(Mat _image,
 
     this->alphak = 	pow(2, (k-1)) * factorial(k-1)/sqrt(k * factorial(2*(k-1)));
 
-    cout << xRes << "\n"; 
-    cout << image.rows << "\n"; 
+    cout << xRes << "\n";
+    cout << image.rows << "\n";
 
-    assert(xRes%2 == 0); // Some function like ft shift not implemented 
+    assert(xRes%2 == 0); // Some function like ft shift not implemented
     // for odd numbers
-    assert(yRes%2 == 0); 
+    assert(yRes%2 == 0);
 }
 
 /*
@@ -50,7 +50,7 @@ void SteerablePyramid::caliculate_one_polar(Mat RS, Mat AT, int i){
     size_t ny = this->image.cols / _tmp;
     vector<float> _wx = linspace<float>(-M_PI, M_PI, nx);
     vector<float> _wy = linspace<float>(-M_PI, M_PI, ny);
-    cout << _wx.size() << " " << _wy.size() << " " << nx << " " << ny << "\n"; 
+    cout << _wx.size() << " " << _wy.size() << " " << nx << " " << ny << "\n";
     polar_coordinates<float>(_wx, _wy, nx, ny, RS);
     angular_coordinates<float>(_wx, _wy, nx, ny, AT);
 }
@@ -60,10 +60,10 @@ void SteerablePyramid::caliculate_polar(vector<Mat> &RS, vector<Mat> &AT){
     for (int i=0; i < this->n; i++) {
         // Computation polar coordinates (radius) on the grid
         float _tmp = pow(2.0, i);
-        Mat _rs(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64F); 
-        Mat _at(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64F); 
-        caliculate_one_polar(_rs, _at, i); 
-        cout << "RS " << _rs.rows << " " << _rs.cols << "\n"; 
+        Mat _rs(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64F);
+        Mat _at(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64F);
+        caliculate_one_polar(_rs, _at, i);
+        cout << "RS " << _rs.rows << " " << _rs.cols << "\n";
         RS.push_back(_rs);
         AT.push_back(_at);
     }
@@ -71,7 +71,7 @@ void SteerablePyramid::caliculate_polar(vector<Mat> &RS, vector<Mat> &AT){
 
 void SteerablePyramid::calicurate_h0_filter(Mat &fil, vector<Mat> &RS){
     Mat RS_0 = RS[0];
-    cout << "size" << RS_0.rows << "\n";  
+    cout << "size" << RS_0.rows << "\n";
     // Mat fil = new Mat(Size(xRes, yRes), CV_64F);
     // Possible parallelisation?
     for (int i = 0; i < xRes; i++){
@@ -150,7 +150,7 @@ void SteerablePyramid::calicurate_b_filter(int i, int j, Mat &fil, const vector<
                 currentCoefficient = alphak * pow(cos(AT[i].at<float>(x, y)
                 - j * M_PI/k), k-1);
             }
-            fil.at<float>(x, y) = currentCoefficient; 
+            fil.at<float>(x, y) = currentCoefficient;
         }
     }
 }
@@ -172,23 +172,23 @@ Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Ma
     Mat l0s(Size(xRes, yRes), CV_64F);
 
     // Find library for fast fourier transform
-    Mat ft(Size(xRes, yRes), CV_64F); 
-    Mat _ft(Size(xRes, yRes), CV_64F); 
+    Mat ft(Size(xRes, yRes), CV_64F);
+    Mat _ft(Size(xRes, yRes), CV_64F);
 
     ///// THREAD 1 in openmp use thread ID //////
 
-    Mat imgBack(Size(xRes, yRes), CV_64F); 
+    Mat imgBack(Size(xRes, yRes), CV_64F);
     image.convertTo(image, CV_64F);
 
-    dft((image), ft); 
-    ft_shift(ft, _ft); 
+    dft((image), ft);
+    ft_shift(ft, _ft);
 
     // Create HO filter
     Mat h0(Size(xRes, yRes), CV_64F);
     calicurate_h0_filter(h0, RS);
 
     h0 = h0.mul(_ft);  // calculation of h0
-    Mat f_ishift(Size(xRes, yRes), CV_64F);  
+    Mat f_ishift(Size(xRes, yRes), CV_64F);
     ft_shift(h0, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
 
@@ -197,36 +197,36 @@ Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Ma
     Mat l0(Size(xRes, yRes), CV_64F);
     calicurate_l0_filter(l0, RS);
 
-    l0 = l0.mul(_ft);  // calculation of h0 
+    l0 = l0.mul(_ft);  // calculation of h0
 
     dft(h0, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
 
-    // Mat lastImage = l0; 
+    // Mat lastImage = l0;
 
-    float _tmp = 1; 
+    float _tmp = 1;
 
-    Mat lastImage = Mat_<std::complex<double> >(xRes/_tmp, yRes/_tmp, CV_64F); 
+    Mat lastImage = Mat_<std::complex<double> >(xRes/_tmp, yRes/_tmp, CV_64F);
 
     // PROBLEME FLOAT ET COMPLEXE
 
     // Parallelize here (use openmp for)
     for (int i = 0; i < n; i ++){
 
-        _tmp = pow(2, i);  
+        _tmp = pow(2, i);
 
         for (int j = 0; j < yRes; j++){
 
             Mat b_filter(Size(xRes/_tmp, yRes/_tmp), CV_64F);
             calicurate_b_filter(i, j, b_filter, AT);
 
-            Mat lb = mul_complex(b_filter, lastImage); 
+            Mat lb = mul_complex(b_filter, lastImage);
 
             Mat f_ishift(Size(xRes/_tmp, yRes/_tmp), CV_64F); // Shift lb
             Mat img_back(Size(xRes/_tmp, yRes/_tmp), CV_64F); // ishift2 f_ishift
 
-            ft_shift(lb, img_back); 
-            idct(lb, f_ishift); 
+            ft_shift(lb, img_back);
+            idct(lb, f_ishift);
 
             BND.push_back(lb);
             BND.push_back(img_back);
@@ -247,16 +247,16 @@ Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Ma
         Mat l(Size(img_x, img_y), CV_64F);
         calicurate_l_filter(i, l, RS);
 
-        cout << "OK\n"; 
+        cout << "OK\n";
 
-        l = l.mul(down_fil); 
+        l = l.mul(down_fil);
 
         down_fil = mul_complex(l, lastImage);
 
         Mat down_image = Mat_<std::complex<double> >(2 * quantification_x, 2 * quantification_y);
         for (int i = quantification_x; i < 3 * quantification_x; i ++){
             for (int j = quantification_y; j < 3* quantification_y; j++){
-                down_image.at<complex<double> >(i - quantification_x, 
+                down_image.at<complex<double> >(i - quantification_x,
                     j - quantification_y) = down_fil.at<complex<double> >(i, j);
             }
         }
@@ -264,18 +264,18 @@ Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Ma
         // Par rapport à la version python, on ne sauvegarde pas low.
         // Ca ne semble pas avoir d'interet.
 
-        lastImage.create(2 * quantification_x, 2 * quantification_y, CV_64F); 
+        lastImage.create(2 * quantification_x, 2 * quantification_y, CV_64F);
 
         lastImage = down_image;
     }
 
     Mat LRf = lastImage;
 
-    return LRf; 
+    return LRf;
 
 }
 
-void SteerablePyramid::collapsePyramids(){
+Mat SteerablePyramid::collapsePyramids(){
 
     vector<Mat> RS; // calculate RS
     vector<Mat> AT; // calculate AT
@@ -284,37 +284,58 @@ void SteerablePyramid::collapsePyramids(){
     this->caliculate_polar(RS, AT);
 
     //Vecteur retour de la valeur de BND
-    Mat resid = createPyramids(RS, AT, BND); 
+    Mat resid = createPyramids(RS, AT, BND);
 
     for (int i = n-1; i > -1; i--){
 
-        Mat tmp(Size(2*resid.rows, 2 * resid.rows), CV_64F); 
+        Mat tmp(Size(2*resid.rows, 2 * resid.rows), CV_64F);
 
-        int quant4x = (int)(resid.rows/2); 
-        int quant4y = (int)(resid.cols/2); 
+        int quant4x = (int)(resid.rows/2);
+        int quant4y = (int)(resid.cols/2);
 
         // Recopy the matrix
         for (int i = quant4x; i < 3 * quant4x; i++){
             for (int j = quant4y; j < 3 * quant4y; j++){
-                tmp.at<complex<float> >(i, j) = 
-                    resid.at<complex<float> >(i - quant4x, j - quant4y); 
+                tmp.at<complex<float> >(i, j) =
+                    resid.at<complex<float> >(i - quant4x, j - quant4y);
             }
         }
 
-        Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F); 
-        calicurate_l_filter(i, filt, AT); 
+        Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F);
+        calicurate_l_filter(i, filt, AT);
 
-        tmp = mul_complex(filt, tmp); 
+        tmp = mul_complex(filt, tmp);
 
         for (int j = 0; j < k; j++){
-            Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F); 
-            calicurate_b_filter(i, j, filt, AT); 
-            tmp = tmp + BND[i * k + j].mul(filt); 
+            Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F);
+            calicurate_b_filter(i, j, filt, AT);
+            tmp = tmp + BND[i * k + j].mul(filt);
         }
 
-
+        resid.create(2*resid.rows, 2*resid.cols, CV_64F);
+        resid = tmp;
     }
 
+    Mat h0(Size(xRes, yRes), CV_64F);
+    calicurate_h0_filter(h0, RS);
+
+    Mat l0(Size(xRes, yRes), CV_64F);
+    calicurate_l0_filter(l0, RS);
+
+    Mat ft(Size(xRes, yRes), CV_64F);
+    Mat _ft(Size(xRes, yRes), CV_64F);
+
+    Mat imgBack(Size(xRes, yRes), CV_64F);
+    image.convertTo(image, CV_64F);
+
+    dft((image), ft);
+    ft_shift(ft, _ft);
+
+    Mat recon(Size(xRes, yRes), CV_64F);
+    Mat mul = mul_complex(h0, _ft);
+    recon = mul_complex(l0, resid) + mul_complex(h0, mul);
+
+    return recon;
 
 }
 
