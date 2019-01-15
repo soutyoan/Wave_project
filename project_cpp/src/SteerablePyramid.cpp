@@ -44,7 +44,7 @@ SteerablePyramid::SteerablePyramid(Mat _image,
 in order to do a good parallelization we need to be able to calculate these
 matrices one at a time
 */
-void SteerablePyramid::caliculate_one_polar(Mat RS, Mat AT, int i){
+void SteerablePyramid::caliculate_one_polar(Mat &RS, Mat &AT, int i){
     float _tmp = pow(2.0, i);
     size_t nx = this->image.rows / _tmp;
     size_t ny = this->image.cols / _tmp;
@@ -215,7 +215,7 @@ Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Ma
 
         _tmp = pow(2, i);
 
-        for (int j = 0; j < yRes; j++){
+        for (int j = 0; j < k; j++){
 
             Mat b_filter(Size(xRes/_tmp, yRes/_tmp), CV_64F);
             calicurate_b_filter(i, j, b_filter, AT);
@@ -286,6 +286,12 @@ Mat SteerablePyramid::collapsePyramids(){
     //Vecteur retour de la valeur de BND
     Mat resid = createPyramids(RS, AT, BND);
 
+    cout << "Pyramid creation OK" << endl;
+
+    for (int i = 0; i < BND.size(); i++){
+        cout << i << " " << BND[i].rows << " " << BND[i].cols << endl;
+    }
+
     for (int i = n-1; i > -1; i--){
 
         Mat tmp(Size(2*resid.rows, 2 * resid.rows), CV_64F);
@@ -309,7 +315,10 @@ Mat SteerablePyramid::collapsePyramids(){
         for (int j = 0; j < k; j++){
             Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F);
             calicurate_b_filter(i, j, filt, AT);
-            tmp = tmp + BND[i * k + j].mul(filt);
+            cout << BND[2*(i * k + j)].rows << " " << BND[2*(i * k + j)].cols << endl;
+            cout << filt.rows << " " << filt.cols << endl;
+            cout << tmp.rows << " " << tmp.cols << endl;
+            tmp = tmp + BND[2*(i * k + j)].mul(filt);
         }
 
         resid.create(2*resid.rows, 2*resid.cols, CV_64F);
