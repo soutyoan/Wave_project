@@ -151,21 +151,21 @@ class SteerablePyramid():
 		fil = self.calicurate_h0_filter()
 		self.H0_FILT = fil
 
-		# caliculate L0 values on the grid.
-		fil = self.calicurate_l0_filter()
-		self.L0_FILT = fil
+		# # caliculate L0 values on the grid.
+		# fil = self.calicurate_l0_filter()
+		# self.L0_FILT = fil
 
-		# caliculate L(Low pass filter) values on the grid.
-		fil = self.calicurate_l_filter()
-		self.L_FILT = fil
+		# # caliculate L(Low pass filter) values on the grid.
+		# fil = self.calicurate_l_filter()
+		# self.L_FILT = fil
 
-		# caliculate H(fot bandpass filter) values on the grid.
-		fil = self.calicurate_h_filter()
-		self.H_FILT = fil
+		# # caliculate H(fot bandpass filter) values on the grid.
+		# fil = self.calicurate_h_filter()
+		# self.H_FILT = fil
 
-		# caliculate B values on the grid.
-		fils = self.calicurate_b_filters()
-		self.B_FILT = fils
+		# # caliculate B values on the grid.
+		# fils = self.calicurate_b_filters()
+		# self.B_FILT = fils
 
 	# caliculate polar coordinates on the grid.
 	def caliculate_polar(self):
