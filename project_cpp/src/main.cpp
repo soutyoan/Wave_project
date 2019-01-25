@@ -10,7 +10,9 @@ int main(int argc, char *argv[]){
         3,
         "lena",
         "lena.png",
-        false
+        false, 
+        0, 
+        0
     );
     return 0;
 }

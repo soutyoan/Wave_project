@@ -95,6 +95,8 @@ public:
     // computation of the sharpness index
     float LPCSharpnessIndex();
 
+    float LPCStrength(vector<float> w, int j, int k); 
+
 private:
     float alphak;
     float d; // LCP computation : step value for s vector computation
