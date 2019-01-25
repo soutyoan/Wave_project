@@ -16,6 +16,6 @@ int main(){
         0.1);
 
     Mat p = s.collapsePyramids();
-    imwrite("../output/output.png", p);
+    imwrite("../../output/output.png", p);
 
 }

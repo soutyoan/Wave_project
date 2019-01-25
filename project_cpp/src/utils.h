@@ -124,7 +124,7 @@ Mat mul_complex(Mat &m1, Mat &m2){
     assert (m1.rows == m2.rows); 
     assert (m1.cols == m2.cols);
 
-    Mat m(m1.rows, m1.cols, CV_64F); 
+    Mat m(m1.rows, m1.cols, CV_32F); 
 
     for (int i = 0; i < m1.rows; i++){
         for (int j = 0; j < m1.cols; j++){
