@@ -17,13 +17,22 @@ int main(){
 
     vector<Mat> RS; // calculate RS
     vector<Mat> AT; // calculate AT
-    Mat filt_u(Size(m.rows, m.cols), CV_32F); 
+    Mat filt_h(Size(m.rows, m.cols), CV_64F); 
 
     s.caliculate_polar(RS, AT);
-    s.calicurate_h0_filter(filt_u, RS); 
+    s.calicurate_h0_filter(filt_h, RS); 
 
-    cout << filt_u.at<float>(511, 495) << endl;
+    cout << filt_h.at<double>(511, 495) << endl;
+
+    imwrite("../../output/high_filt.png", filt_h);
+
+    Mat filt_u(Size(m.rows, m.cols), CV_64F); 
+
+    s.calicurate_l0_filter(filt_u, RS); 
+
+    cout << filt_u.at<double>(511, 495) << endl;
 
     imwrite("../../output/low_filt.png", filt_u);
+    imwrite("../../output/rs.png", RS[0]);
 
 }

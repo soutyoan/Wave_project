@@ -32,10 +32,10 @@ public:
 
     // LPC attributes
     // constant to stabilize computations
-    float C;
+    double C;
 
     // value for sharpness computation
-    float beta;
+    double beta;
 
     SteerablePyramid(Mat image,
                     int xRes,
@@ -45,8 +45,8 @@ public:
                     string image_name,
                     string output_path,
                     bool verbose,
-                    float C,
-                    float beta);
+                    double C,
+                    double beta);
 
     ~SteerablePyramid();
 
@@ -81,26 +81,26 @@ public:
     // LCP computation methods
 
     // weights computation
-    void get_w(vector<float>& w);
+    void get_w(vector<double>& w);
 
     //compute of LPC strength
-    float LPCStrength(const vector<float>& w, int j, int k);
+    double LPCStrength(const vector<double>& w, int j, int k);
 
     // computation of spatial LPC
-    float SpatialLPC(int k);
+    double SpatialLPC(int k);
 
     // computation of LPC map
     void LPCMap(Mat& map);
 
     // computation of the sharpness index
-    float LPCSharpnessIndex();
+    double LPCSharpnessIndex();
 
-    float LPCStrength(vector<float> w, int j, int k); 
+    double LPCStrength(vector<double> w, int j, int k); 
 
 private:
-    float alphak;
-    float d; // LCP computation : step value for s vector computation
-    float s1; // LCP computation : choice of strength for the finest scale
+    double alphak;
+    double d; // LCP computation : step value for s vector computation
+    double s1; // LCP computation : choice of strength for the finest scale
 
 };
 

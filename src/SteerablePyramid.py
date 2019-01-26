@@ -151,9 +151,9 @@ class SteerablePyramid():
 		fil = self.calicurate_h0_filter()
 		self.H0_FILT = fil
 
-		# # caliculate L0 values on the grid.
-		# fil = self.calicurate_l0_filter()
-		# self.L0_FILT = fil
+		# caliculate L0 values on the grid.
+		fil = self.calicurate_l0_filter()
+		self.L0_FILT = fil
 
 		# # caliculate L(Low pass filter) values on the grid.
 		# fil = self.calicurate_l_filter()

@@ -51,28 +51,28 @@ void ft_shift(Mat &in, Mat &out){
     // Block 1 to 4
     for (int i = 0; i < middle_x; i++){
         for (int j = 0; j < middle_y; j++){
-            out.at<float>(i + middle_x, j + middle_y) = in.at<float>(i, j); 
+            out.at<double>(i + middle_x, j + middle_y) = in.at<double>(i, j); 
         }
     }
 
     // Block 4 to 1
     for (int i = 0; i < middle_x; i++){
         for (int j = 0; j < middle_y; j++){
-            out.at<float>(i, j) = in.at<float>(i + middle_x, j + middle_y); 
+            out.at<double>(i, j) = in.at<double>(i + middle_x, j + middle_y); 
         }
     }
 
     // Block 3 to 2
     for (int i = 0; i < middle_x; i++){
         for (int j = 0; j < middle_y; j++){
-            out.at<float>(i + middle_x, j) = in.at<float>(i, j + middle_y); 
+            out.at<double>(i + middle_x, j) = in.at<double>(i, j + middle_y); 
         }
     }
 
     // Block 2 to 3
     for (int i = 0; i < middle_x; i++){
         for (int j = 0; j < middle_y; j++){
-            out.at<float>(i, j + middle_y) = in.at<float>(i + middle_x, j); 
+            out.at<double>(i, j + middle_y) = in.at<double>(i + middle_x, j); 
         }
     }
 }
@@ -121,14 +121,16 @@ void angular_coordinates(const vector<T> &wx, const vector<T> &wy,
 }
 
 Mat mul_complex(Mat &m1, Mat &m2){
-    assert (m1.rows == m2.rows); 
+    assert (m1.rows == m2.rows);
     assert (m1.cols == m2.cols);
 
-    Mat m(m1.rows, m1.cols, CV_32F); 
+    cout << "ASSERTIONS OK" << endl; 
+
+    Mat_<std::complex<double> > m(Size(m1.rows, m1.cols), CV_64F); 
 
     for (int i = 0; i < m1.rows; i++){
         for (int j = 0; j < m1.cols; j++){
-            m.at<complex<float> >(i, j) = m1.at<float>(i, j) * m2.at<complex<float> >(i, j); 
+            m.at<complex<double> >(i, j) = m1.at<double>(i, j) * m2.at<complex<double> >(i, j); 
         }
     }
 
