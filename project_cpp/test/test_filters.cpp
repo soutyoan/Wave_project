@@ -17,7 +17,7 @@ int main(){
 
     vector<Mat> RS; // calculate RS
     vector<Mat> AT; // calculate AT
-    Mat filt_h(Size(m.rows, m.cols), CV_64F); 
+    Mat filt_h(Size(m.rows, m.cols), CV_64FC1); 
 
     s.caliculate_polar(RS, AT);
     s.calicurate_h0_filter(filt_h, RS); 
@@ -26,7 +26,7 @@ int main(){
 
     imwrite("../../output/high_filt.png", filt_h);
 
-    Mat filt_u(Size(m.rows, m.cols), CV_64F); 
+    Mat filt_u(Size(m.rows, m.cols), CV_64FC1); 
 
     s.calicurate_l0_filter(filt_u, RS); 
 

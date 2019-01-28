@@ -64,8 +64,8 @@ void SteerablePyramid::caliculate_polar(vector<Mat> &RS, vector<Mat> &AT){
     for (int i=0; i < this->n; i++) {
         // Computation polar coordinates (radius) on the grid
         double _tmp = pow(2.0, i);
-        Mat _rs(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64F);
-        Mat _at(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64F);
+        Mat _rs(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64FC1);
+        Mat _at(Size(this->image.rows / _tmp, this->image.cols / _tmp), CV_64FC1);
         caliculate_one_polar(_rs, _at, i);
         cout << "RS " << _rs.rows << " " << _rs.cols << "\n";
         RS.push_back(_rs);
@@ -97,7 +97,7 @@ void SteerablePyramid::calicurate_l0_filter(Mat &fil, vector<Mat> &RS){
             } else if (RS_0.at<double>(i, j) <= M_PI/2){
                 fil.at<double>(i, j) = 1;
             } else {
-                fil.at<double>(i, j) = cos(M_PI/2 * log2(RS_0.at<double>(i, j)/M_PI));
+                fil.at<double>(i, j) = cos(M_PI/2 * log2(2 * RS_0.at<double>(i, j)/M_PI));
             }
         }
     }
@@ -123,7 +123,7 @@ void SteerablePyramid::calicurate_h_filter(vector<Mat> &f, vector<Mat> &RS){
     Mat RS_0 = RS[0];
     for (int i = 0; i < n; i++){
         double _tmp = pow(2.0, i);
-        Mat m(Size(xRes/_tmp, yRes/_tmp), CV_64F, 0);
+        Mat m(Size(xRes/_tmp, yRes/_tmp), CV_64FC1, 0);
         for (int x = 0; x < xRes/_tmp; x++){
             for(int y = 0; y < yRes/_tmp; y++){
                 if (RS_0.at<double>(x, y) >= M_PI/2){
@@ -170,47 +170,47 @@ void fillDownfillMatrix(Mat &down, int x, int y){
 Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Mat> &BND){
 
     // Create all the matrices used during the collapse function
-    Mat h0f(Size(xRes, yRes), CV_64F);
-    Mat h0s(Size(xRes, yRes), CV_64F);
-    Mat l0f(Size(xRes, yRes), CV_64F);
-    Mat l0s(Size(xRes, yRes), CV_64F);
+    Mat h0f(Size(xRes, yRes), CV_64FC1);
+    Mat h0s(Size(xRes, yRes), CV_64FC1);
+    Mat l0f(Size(xRes, yRes), CV_64FC1);
+    Mat l0s(Size(xRes, yRes), CV_64FC1);
 
     // Find library for fast fourier transform
-    Mat ft(Size(xRes, yRes), CV_64F);
-    Mat _ft(Size(xRes, yRes), CV_64F);
+    Mat ft = Mat_<std::complex<double> > (Size(xRes, yRes), CV_64FC1);
+    Mat _ft = Mat_<std::complex<double> > (Size(xRes, yRes), CV_64FC1);
 
     ///// THREAD 1 in openmp use thread ID //////
 
-    Mat imgBack(Size(xRes, yRes), CV_64F);
-    image.convertTo(image, CV_64F);
+    Mat imgBack(Size(xRes, yRes), CV_64FC1);
+    image.convertTo(image, CV_64FC1);
 
     dft((image), ft);
-    ft_shift(ft, _ft);
+    ft_shift<std::complex<double> >(ft, _ft);
 
     // Create HO filter
-    Mat h0(Size(xRes, yRes), CV_64F);
+    Mat h0(Size(xRes, yRes), CV_64FC1);
     calicurate_h0_filter(h0, RS);
 
-    h0 = h0.mul(_ft);  // calculation of h0
-    Mat f_ishift(Size(xRes, yRes), CV_64F);
-    ft_shift(h0, f_ishift); // FFT opencv
+    Mat m = mul_complex(h0, _ft);  // calculation of h0
+    Mat f_ishift = Mat_<std::complex<double> > (Size(xRes, yRes), CV_64FC1);
+    ft_shift<std::complex<double> >(m, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
 
     //// THREAD 2 in openmp use thread ID /////
 
-    Mat l0(Size(xRes, yRes), CV_64F);
+    Mat l0(Size(xRes, yRes), CV_64FC1);
     calicurate_l0_filter(l0, RS);
 
-    l0 = l0.mul(_ft);  // calculation of h0
+    _ft = mul_complex(l0, _ft);  // calculation of h0
 
-    dft(h0, f_ishift); // FFT opencv
+    ft_shift<std::complex<double> >(_ft, f_ishift); // FFT opencv
     idft(f_ishift, imgBack); // IFFT opencv
 
     // Mat lastImage = l0;
 
     double _tmp = 1;
 
-    Mat lastImage = Mat_<std::complex<double> >(xRes/_tmp, yRes/_tmp, CV_64F);
+    Mat lastImage = Mat_<std::complex<double> >(xRes/_tmp, yRes/_tmp, CV_64FC1);
 
     // PROBLEME FLOAT ET COMPLEXE
 
@@ -221,16 +221,16 @@ Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Ma
 
         for (int j = 0; j < k; j++){
 
-            Mat b_filter(Size(xRes/_tmp, yRes/_tmp), CV_64F);
+            Mat b_filter(Size(xRes/_tmp, yRes/_tmp), CV_64FC1);
             calicurate_b_filter(i, j, b_filter, AT);
 
             Mat lb = mul_complex(b_filter, lastImage);
 
-            Mat f_ishift(Size(xRes/_tmp, yRes/_tmp), CV_64F); // Shift lb
-            Mat img_back(Size(xRes/_tmp, yRes/_tmp), CV_64F); // ishift2 f_ishift
+            Mat f_ishift = Mat_<std::complex<double> >(Size(xRes/_tmp, yRes/_tmp), CV_64FC1); // Shift lb
+            Mat img_back = Mat_<std::complex<double> >(Size(xRes/_tmp, yRes/_tmp), CV_64FC1); // ishift2 f_ishift
 
-            ft_shift(lb, img_back);
-            idct(lb, f_ishift);
+            ft_shift<std::complex<double> >(lb, img_back);
+            idft(lb, f_ishift);
 
             BND.push_back(lb);
             BND.push_back(img_back);
@@ -245,15 +245,17 @@ Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Ma
         int quantification_x = (int)(img_x/4);
         int quantification_y = (int)(img_y/4);
 
-        Mat_<std::complex<double> > down_fil(Size(img_x, img_y), CV_64F);
+        Mat_<std::complex<double> > down_fil(Size(img_x, img_y), CV_64FC1);
         fillDownfillMatrix(down_fil, quantification_x, quantification_y);
 
-        Mat_<std::complex<double> > l(Size(img_x, img_y), CV_64F);
+        Mat_<std::complex<double> > l(Size(img_x, img_y), CV_64FC1);
         calicurate_l_filter(i, l, RS);
 
         cout << "OK\n";
 
         l = l.mul(down_fil);
+
+        cout << "ICI\n";
 
         down_fil = mul_complex(l, lastImage);
 
@@ -268,7 +270,7 @@ Mat SteerablePyramid::createPyramids(vector<Mat> &RS, vector<Mat> &AT, vector<Ma
         // Par rapport à la version python, on ne sauvegarde pas low.
         // Ca ne semble pas avoir d'interet.
 
-        lastImage.create(2 * quantification_x, 2 * quantification_y, CV_64F);
+        lastImage.create(2 * quantification_x, 2 * quantification_y, CV_64FC1);
 
         lastImage = down_image;
     }
@@ -298,7 +300,7 @@ Mat SteerablePyramid::collapsePyramids(){
 
     for (int i = n-1; i > -1; i--){
 
-        Mat tmp(Size(2*resid.rows, 2 * resid.rows), CV_64F);
+        Mat tmp = Mat_<std::complex<double> > (Size(2*resid.rows, 2 * resid.rows), CV_64FC1);
 
         int quant4x = (int)(resid.rows/2);
         int quant4y = (int)(resid.cols/2);
@@ -311,13 +313,13 @@ Mat SteerablePyramid::collapsePyramids(){
             }
         }
 
-        Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F);
+        Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64FC1);
         calicurate_l_filter(i, filt, AT);
 
         tmp = mul_complex(filt, tmp);
 
         for (int j = 0; j < k; j++){
-            Mat filt(Size(2*resid.rows, 2 * resid.rows), CV_64F);
+            Mat filt = Mat_<std::complex<double> >(Size(2*resid.rows, 2 * resid.rows), CV_64FC1);
             calicurate_b_filter(i, j, filt, AT);
             cout << BND[2*(i * k + j)].rows << " " << BND[2*(i * k + j)].cols << endl;
             cout << filt.rows << " " << filt.cols << endl;
@@ -325,30 +327,43 @@ Mat SteerablePyramid::collapsePyramids(){
             tmp = tmp + BND[2*(i * k + j)].mul(filt);
         }
 
-        resid.create(2*resid.rows, 2*resid.cols, CV_64F);
+        resid.create(2*resid.rows, 2*resid.cols, CV_64FC1);
         resid = tmp;
     }
 
-    Mat h0(Size(xRes, yRes), CV_64F);
+    Mat h0(Size(xRes, yRes), CV_64FC1);
     calicurate_h0_filter(h0, RS);
 
-    Mat l0(Size(xRes, yRes), CV_64F);
+    Mat l0(Size(xRes, yRes), CV_64FC1);
     calicurate_l0_filter(l0, RS);
 
-    Mat ft(Size(xRes, yRes), CV_64F);
-    Mat _ft(Size(xRes, yRes), CV_64F);
+    Mat ft = Mat_<std::complex<double> >(Size(xRes, yRes), CV_64FC1);
+    Mat _ft = Mat_<std::complex<double> >(Size(xRes, yRes), CV_64FC1);
 
-    Mat imgBack(Size(xRes, yRes), CV_64F);
-    image.convertTo(image, CV_64F);
+    Mat imgBack(Size(xRes, yRes), CV_64FC1);
+    image.convertTo(image, CV_64FC1);
 
     dft((image), ft);
-    ft_shift(ft, _ft);
+    ft_shift<std::complex<double> >(ft, _ft);
 
-    Mat recon(Size(xRes, yRes), CV_64F);
+    Mat recon(Size(xRes, yRes), CV_64FC1);
     Mat mul = mul_complex(h0, _ft);
     recon = mul_complex(l0, resid) + mul_complex(h0, mul);
 
-    return recon;
+    Mat recon_real(Size(xRes, yRes), CV_64FC1);
+    idft(recon, recon_real);
+
+    cout << recon_real.channels() << endl;
+
+    Mat ch1;
+    // "channels" is a vector of 3 Mat arrays:
+    vector<Mat> channels(2);
+    // split img:
+    split(recon_real, channels);
+    // get the channels (dont forget they follow BGR order in OpenCV)
+    ch1 = channels[0];
+
+    return ch1;
 
 }
 

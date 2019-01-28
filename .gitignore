@@ -3,3 +3,4 @@ output/**/*.png
 src/__pycache__/
 *.pyc
 .vscode/
+*.pyc
