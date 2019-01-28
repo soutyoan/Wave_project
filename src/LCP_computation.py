@@ -177,13 +177,15 @@ def compute_LPC_index(steer, C, beta, K=1.0):
     """
     print("LCP index computation")
     LPC_map = compute_LPC_map(steer, C)
+    cv2.imwrite(ROOT_PATH+"output/{}_LPCmap_N_{}_M_{}_C_{}_B_{}.png".format(image_name, steer.N, steer.K, C, beta), np.absolute(255*LPC_map))
     nb_coeffs = int(K * LPC_map.size)
-    sorted_LPC = np.sort(LPC_map.flatten())[:nb_coeffs]
+    sorted_LPC = np.flip(np.sort(LPC_map.flatten())[:nb_coeffs], 0)
+    print(sorted_LPC)
     weights = np.exp(np.array([-(k-1)/(nb_coeffs-1)/beta for k in range(nb_coeffs)]))
     return np.dot(sorted_LPC, weights) / np.sum(weights)
 
 if (__name__ == "__main__"):
-    parser = argparse.ArgumentParser(description="Wavelets project 2018-2019 : Sharpness index based on Local Phase Coherence")
+    parser = argparse.ArgumentParser(description="Wavelets Ensimag project 2018-2019 : Sharpness index based on Local Phase Coherence")
     parser.add_argument("--input_file", '-i', help='Input File Name (file must be in images/ folder)')
     parser.add_argument('--depth', '-N', default=3, type=int, help='Depth of Pyramid. Integer')
     parser.add_argument('--orientation', '-M', default=8, type=int, help='Number of orientations of pyramid. Integer')
@@ -203,13 +205,8 @@ if (__name__ == "__main__"):
     steer = SteerablePyramid(image, xres, yres, args.depth, args.orientation, image_name, ROOT_PATH+"output", args.verbose)
     steer.create_pyramids()
 
-    # Computation of LCP map
-    LPC_map = compute_LPC_map(steer, args.constant)
-
     # Computation of LPC index
-    print(compute_LPC_index(steer, args.constant, args.beta))
+    print("\nSharpness Value: ", compute_LPC_index(steer, args.constant, args.beta))
 
-
-    cv2.imwrite(ROOT_PATH+"output/{}_LPC_map.png".format(image_name), np.absolute(250*LPC_map))
 
     # Computation of LPC score
