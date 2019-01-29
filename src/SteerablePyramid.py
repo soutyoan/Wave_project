@@ -20,7 +20,7 @@
 	http://www.cns.nyu.edu/pub/lcv/portilla99.pdf
 
 	According to MatLab source code distributed by E.Simoncelli, filters are applied in
-	spatioal domain.
+	spatial domain.
 	https://github.com/gregfreeman/matlabPyrTools
 
 	See also,
@@ -83,7 +83,7 @@ class SteerablePyramid():
 					image chosen name
 		out_path 	string
 					name of output path for images saving (asbolute path is handled in init)
-		verbose 	{0, 1} (disabled option for this project)
+		verbose 	{0, 1} (disabled option for filters functions)
 					0 : no displays, 1 : displays
 		'''
 		self.XRES = xres # horizontal resolution
