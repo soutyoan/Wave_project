@@ -1,7 +1,9 @@
+#!/usr/bin/env python3
 """
 Implementation of complex Gabor filters and bands
 """
 import numpy as  np
+import os
 import cv2
 from scipy.ndimage.filters import gaussian_filter1d
 
@@ -13,6 +15,8 @@ for s in os.path.abspath(__file__).split('/'):
         break
 
 IMG_PATH = ROOT_PATH+"/images/"
+
+OUTPUT_PATH = ROOT_PATH+"/output/"
 
 class ComplexGabor():
     """
@@ -35,13 +39,13 @@ class ComplexGabor():
                             number of wished orientations
 
         """
-        self.image = cv2.imread(IMG_PATH+image_path)
+        self.image = cv2.imread(IMG_PATH+image_path, 0)
         assert self.image is not None
         self.nb_scales = nb_scales
         self.nb_theta = nb_theta
         self.frequencies = np.linspace(1.0, float(nb_scales), num=nb_scales)
 
-    def compute_bands():
+    def compute_bands(self):
         """
             Subbands computations. We do not process with downsampling method
 
@@ -89,7 +93,8 @@ class ComplexGabor():
                 H, W = f.shape[:2]
                 J = self.compute_J(w_i, theta_k, sig_i)
                 F = np.empty((H, W), dtype=complex)
-
+                cos_w_theta = w_i*np.cos(theta_k)
+                sin_w_theta = w_i*np.sin(theta_k)
                 for x in range(W):
                     f_cr = np.copy(np.real(J[:, x]).flatten()) * np.array([np.cos(l*sin_w_theta) for l in range(H)])
                     f_sr = np.copy(np.real(J[:, x]).flatten()) * np.array([np.sin(l*sin_w_theta) for l in range(H)])
@@ -102,7 +107,7 @@ class ComplexGabor():
                         fcr_fsi = gaussian_filter1d(f_cr-f_si, sig_i)
                         fsr_fci = gaussian_filter1d(f_sr+f_ci, sig_i)
                     _temp = fcr_fsi + 1j * fsr_fci
-                    F[:, x] = np.reshape(_temp, (H, 1))
+                    F[:, x] = _temp
                 return F
 
     def compute_J(self, w_i, theta_k, sig_i):
@@ -138,3 +143,13 @@ class ComplexGabor():
                     smoothed_fs = gaussian_filter1d(f_s, sig_i)
                     J[y, :] = smoothed_fc + smoothed_fs + 1j * (smoothed_fs - smoothed_fc)
                 return J
+
+if (__name__=="__main__"):
+    image_path = "small_lena.jpg"
+    nb_scales = 5
+    nb_theta = 8
+    gabor = ComplexGabor(image_path, nb_scales, nb_theta)
+    F = gabor.compute_bands()
+    for i in range(nb_scales):
+        for k in range(nb_theta):
+            cv2.imwrite(OUTPUT_PATH+"subband_{}_{}.jpg".format(i, k), np.absolute(F[i, k]))
