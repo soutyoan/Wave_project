@@ -48,7 +48,12 @@ class ComplexGabor():
         self.nb_theta = nb_theta
         self.frequencies = np.linspace(1.0, float(nb_scales), num=nb_scales)
         self.verbose = verbose
-        self.bands = self.compute_bands()
+        H, W = self.image.shape[:2]
+        N = self.nb_theta
+        O = self.nb_scales
+        f = self.image
+        self.bands = np.empty((O, N, H, W), dtype=complex)
+        self.compute_bands()
 
     def compute_bands(self):
         """
@@ -78,7 +83,7 @@ class ComplexGabor():
                 bar.update(i*N + k+1)
                 if (self.verbose):
                     cv2.imwrite(OUTPUT_PATH+self.image_name+"subband_{}_{}.jpg".format(i, k), np.absolute(F[i, k]))
-        return F
+        self.bands = F
 
     def compute_F(self, w_i, theta_k, sig_i):
                 """
