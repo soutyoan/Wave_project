@@ -46,7 +46,7 @@ class ComplexGabor():
         assert self.image is not None
         self.nb_scales = nb_scales
         self.nb_theta = nb_theta
-        self.frequencies = np.linspace(1.0, float(nb_scales), num=nb_scales)
+        self.frequencies = np.array([np.power(2, -(i+2)/2) for i in range(nb_scales)])
         self.verbose = verbose
         H, W = self.image.shape[:2]
         N = self.nb_theta
@@ -70,7 +70,7 @@ class ComplexGabor():
         O = self.nb_scales
         f = self.image
         F = np.empty((O, N, H, W), dtype=complex)
-        print("===== Complex Gabor Filtering =====")
+        print("\n===== Complex Gabor Filtering =====")
         bar = progressbar.ProgressBar(max_value=O*N)
         for i in range(O):
             w_i = self.frequencies[i]
