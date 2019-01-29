@@ -5,7 +5,7 @@ Local Phase Coherence Implementation
 
 import os, sys, cv2
 import numpy as np
-from SteerablePyramid import SteerablePyramid
+from ComplexGaborFilters import ComplexGabor
 import argparse
 import progressbar
 
@@ -73,14 +73,14 @@ def get_w(N, d=1.0, s1=1.0, mode='lin'):
     return res
 
 
-def compute_LPC_strength(steer, j, k, d=1, s1=1, mode='lin'):
+def compute_LPC_strength(gabor, j, k, d=1, s1=1, mode='lin'):
     """
         Computation of Local Phase Coherence strength
 
         Parameters
         ----------
-        steer       SteerablePyramid
-                    input steerable Pyramid
+        gabor       ComplexGabor
+                    complex Gabor decomposition
         j           integer
                     chosen orientation
         k           integer
@@ -91,27 +91,25 @@ def compute_LPC_strength(steer, j, k, d=1, s1=1, mode='lin'):
         float
                     S_{LPC}^{j,k}
     """
-    _w = get_w(steer.N, d=d, s1=s1, mode=mode)
+    _w = get_w(gabor.nb_scales, d=d, s1=s1, mode=mode)
     _phi = []
-    ind = k
-    for i in range(steer.N):
-        #print(ind, steer.BND[i][j]['s'].size)
-        _cijk = steer.BND[i][j]['s'].flatten()[ind]
+    for i in range(gabor.nb_scales):
+        #print(ind, gabor.BND[i][j]['s'].size)
+        _cijk = gabor.bands[i][j].flatten()[k]
         _phi.append(np.angle(_cijk))
-        ind >>= 2
     _phi = np.array(_phi)
     return np.cos(np.dot(_w, _phi))
 
 
 
-def compute_spatial_LPC(steer, k, C):
+def compute_spatial_LPC(gabor, k, C):
     """
         Computation of Local Phsae Coherence coefficient.
 
         Parameters
         ----------
-        steer       SteerablePyramid
-                    input steerable pyramid
+        gabor       ComplexGabor
+                    input complex Gabor filtering
         k           integer
                     spatial location
         C           float
@@ -122,20 +120,20 @@ def compute_spatial_LPC(steer, k, C):
         float
                     S_{LPC}^{k}
     """
-    c1jk = np.absolute(np.array([steer.BND[0][j]['s'].flatten()[k] for j in range(steer.K)]))
-    phi = np.array([compute_LPC_strength(steer,j,k) for j in range(steer.K)])
+    c1jk = np.absolute(np.array([gabor.bands[0][j].flatten()[k] for j in range(gabor.nb_theta)]))
+    phi = np.array([compute_LPC_strength(gabor,j,k) for j in range(gabor.nb_theta)])
     return np.sum(c1jk * phi) / (np.sum(c1jk) + C)
 
 
 
-def compute_LPC_map(steer, C):
+def compute_LPC_map(gabor, C):
     """
         Computation of LPC map.
 
         Parameters
         ----------
-        steer       SteerablePyramid
-                    input steerable pyramid
+        gabor       ComplexGabor
+                    input complex Gabor filtering
         C           float > 0
                     constant for stabilisation purposes
 
@@ -144,23 +142,23 @@ def compute_LPC_map(steer, C):
         numpy.ndarray
                     map of LPC coefficient
     """
-    res = np.zeros(steer.IMAGE_ARRAY.size)
+    res = np.zeros(gabor.image.shape[:2])
     res = res.flatten()
-    print("LCP map computation")
+    print("\n===== LCP map computation =====")
     bar = progressbar.ProgressBar(max_value=res.shape[0])
     for k in range(res.shape[0]):
-        res[k] = compute_spatial_LPC(steer, k, C)
-        bar.update(k)
-    return res.reshape(steer.IMAGE_ARRAY.shape[:2])
+        res[k] = compute_spatial_LPC(gabor, k, C)
+        bar.update(k+1)
+    return res.reshape(gabor.image.shape[:2])
 
 
-def compute_LPC_index(steer, C, beta, K=1.0):
+def compute_LPC_index(gabor, C, beta, K=1.0):
     """
         Computation of LPC index.
 
         Parameters
         ----------
-        steer           SteerablePyramid
+        gabor           ComplexGabor
                         input steerable pyramid
         C               float > 0
                         constant for stabilisation purposes
@@ -173,14 +171,14 @@ def compute_LPC_index(steer, C, beta, K=1.0):
         Returns
         -------
         float in [0, 1]
-                        LPC-based sharpness index of steer.IMAGE_ARRAY
+                        LPC-based sharpness index of gabor.IMAGE_ARRAY
     """
-    print("LCP index computation")
-    LPC_map = compute_LPC_map(steer, C)
-    cv2.imwrite(ROOT_PATH+"output/{}_LPCmap_N_{}_M_{}_C_{}_B_{}.png".format(image_name, steer.N, steer.K, C, beta), np.absolute(255*LPC_map))
+    print("\n===== LCP index computation =====")
+    LPC_map = compute_LPC_map(gabor, C)
+    if (gabor.verbose):
+        cv2.imwrite(ROOT_PATH+"output/{}_LPCmap_N_{}_M_{}_C_{}_B_{}.png".format(gabor.image_name, gabor.nb_scales, gabor.nb_theta, C, beta), np.absolute(255*LPC_map))
     nb_coeffs = int(K * LPC_map.size)
     sorted_LPC = np.flip(np.sort(LPC_map.flatten())[:nb_coeffs], 0)
-    print(sorted_LPC)
     weights = np.exp(np.array([-(k-1)/(nb_coeffs-1)/beta for k in range(nb_coeffs)]))
     return np.dot(sorted_LPC, weights) / np.sum(weights)
 
@@ -195,18 +193,12 @@ if (__name__ == "__main__"):
     parser.add_argument('--verbose', '-v', default=1, type=int, help='verbose')
     args = parser.parse_args()
 
-    # Grayscale mode image reading
-    image = cv2.imread(ROOT_PATH+"/images/"+args.input_file, 0)
-    assert image is not None
-    yres, xres = image.shape[:2]
-
-    # Steerable pyramid building
-    image_name = args.input_file.split('.')[0]
-    steer = SteerablePyramid(image, xres, yres, args.depth, args.orientation, image_name, ROOT_PATH+"output", args.verbose)
-    steer.create_pyramids()
+    # Comple Gabor filtering
+    image_path = args.input_file
+    nb_scales = args.depth
+    nb_theta = args.orientation
+    gabor = ComplexGabor(image_path, nb_scales, nb_theta, verbose=args.verbose)
 
     # Computation of LPC index
-    print("\nSharpness Value: ", compute_LPC_index(steer, args.constant, args.beta))
-
-
-    # Computation of LPC score
+    S = compute_LPC_index(gabor, args.constant, args.beta)
+    print("\n===== Sharpness Value: ", S)
